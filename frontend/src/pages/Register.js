@@ -23,7 +23,7 @@ export default function Register() {
     setSuccess(null);
 
     try {
-      const response = await axiosInstance.post('/api/user', formData);
+      const response = await axiosInstance.post('/user', formData);
       setSuccess(response.data.message);
       setTimeout(() => navigate('/login'), 2000); // redirect
     } catch (err) {

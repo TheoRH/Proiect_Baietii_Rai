@@ -1,4 +1,23 @@
 import Conference from '../entities/Conferinte.js';
+import User from '../entities/User.js';
+
+export async function addReviewerToConference(conferenceId, reviewerId) {
+  try {
+    const conference = await Conference.findByPk(conferenceId);
+    const reviewer = await User.findByPk(reviewerId);
+
+    if (!conference || !reviewer) {
+      throw new Error('Conferința sau utilizatorul nu a fost găsit.');
+    }
+
+    await conference.addReviewer(reviewer); // adauga reviewer
+    return { message: 'Reviewer adăugat cu succes la conferință.' };
+  } catch (error) {
+    console.error('Eroare la alocarea reviewerului:', error);
+    throw error;
+  }
+}
+
 
 export async function createConference(data) {
   try {

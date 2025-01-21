@@ -24,14 +24,18 @@ async function Create_DB() {
 
 // relatii intre entitati
 function FK_Config() {
-  // Relatii 1-n
+  // Relații 1-n
   User.hasMany(Article, { as: aliasArticle, foreignKey: "UserId" });
   Article.belongsTo(User, { foreignKey: "UserId" });
 
   User.hasMany(Conference, { as: aliasConference, foreignKey: "OrganizerId" });
   Conference.belongsTo(User, { foreignKey: "OrganizerId" });
 
-  // Relatii n-n
+  // Relații n-n pentru revieweri
+  Conference.belongsToMany(User, { through: "ConferenceReviewers", as: "Reviewers", foreignKey: "ConferenceId" });
+  User.belongsToMany(Conference, { through: "ConferenceReviewers", as: "ReviewerConferences", foreignKey: "UserId" });
+
+  // Relații n-n pentru articole
   Conference.belongsToMany(Article, { through: "ConferenceArticles", as: "ArticlesInConference", foreignKey: "ConferenceId" });
   Article.belongsToMany(Conference, { through: "ConferenceArticles", as: "ConferencesForArticle", foreignKey: "ArticleId" });
 }

@@ -10,7 +10,7 @@ class ConferenceStore {
   constructor() {
     makeAutoObservable(this);
 
-    // Autorun pentru reload 
+    // Autorun pentru reload
     autorun(() => {
       if (authStore.isLoggedIn()) {
         this.fetchConferences();
@@ -40,6 +40,51 @@ class ConferenceStore {
       this.isLoading = false;
     }
   }
+
+  async addConference(conferenceData) {
+    if (!authStore.getToken()) {
+      console.warn('Token lipsă, nu se poate adăuga conferința.');
+      return;
+    }
+  
+    try {
+      const response = await axiosInstance.post('/conference', conferenceData, {
+        headers: { Authorization: `Bearer ${authStore.getToken()}` },
+      });
+  
+      const newConference = response.data;
+  
+      // Actualizăm lista fără a necesita refresh
+      this.conferences = [...this.conferences, newConference];
+    } catch (error) {
+      console.error('Eroare la adăugarea conferinței:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Eroare la adăugarea conferinței.');
+    }
+  }
+  
+
+
+  async deleteConference(conferenceId) {
+    if (!authStore.getToken()) {
+      console.warn('Token lipsă, nu se poate șterge conferința.');
+      return;
+    }
+  
+    try {
+      await axiosInstance.delete(`/conference/${conferenceId}`, {
+        headers: { Authorization: `Bearer ${authStore.getToken()}` },
+      });
+  
+      // Eliminăm conferința din listă
+      this.conferences = this.conferences.filter(
+        (conference) => conference.ConferenceId !== conferenceId
+      );
+    } catch (error) {
+      console.error('Eroare la ștergerea conferinței:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Eroare la ștergerea conferinței.');
+    }
+  }
+  
 
   resetConferences() {
     this.conferences = [];

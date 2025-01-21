@@ -22,7 +22,7 @@ userRouter.post('/user/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.UserId, role: user.role },
+      { id: user.UserId, username: user.username, role: user.role }, // Adăugăm username în token
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
@@ -37,6 +37,7 @@ userRouter.post('/user/login', async (req, res) => {
     res.status(500).json({ message: 'A apărut o eroare la autentificare.' });
   }
 });
+
 
 // Creare utilizator nou
 userRouter.post('/user', async (req, res) => {
