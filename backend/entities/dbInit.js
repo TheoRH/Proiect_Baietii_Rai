@@ -3,6 +3,7 @@ import env from 'dotenv';
 import User from "./User.js";
 import Conference from "./Conferinte.js";
 import Article from "./Articole.js";
+import db from '../config/dbConfig.js';
 import { aliasUser, aliasConference, aliasArticle } from './dbConst.js';
 
 env.config();
@@ -31,24 +32,51 @@ function FK_Config() {
   User.hasMany(Conference, { as: aliasConference, foreignKey: "OrganizerId" });
   Conference.belongsTo(User, { foreignKey: "OrganizerId" });
 
-  // Relații n-n pentru revieweri
-  Conference.belongsToMany(User, { through: "ConferenceReviewers", as: "Reviewers", foreignKey: "ConferenceId" });
-  User.belongsToMany(Conference, { through: "ConferenceReviewers", as: "ReviewerConferences", foreignKey: "UserId" });
+  // // Relații n-n pentru revieweri
+  // Conference.belongsToMany(User, { through: "ConferenceReviewers", as: "Reviewers", foreignKey: "ConferenceId" });
+  // User.belongsToMany(Conference, { through: "ConferenceReviewers", as: "ReviewerConferences", foreignKey: "UserId" });
 
-  // Relații n-n pentru articole
-  Conference.belongsToMany(Article, { through: "ConferenceArticles", as: "ArticlesInConference", foreignKey: "ConferenceId" });
-  Article.belongsToMany(Conference, { through: "ConferenceArticles", as: "ConferencesForArticle", foreignKey: "ArticleId" });
+  // // Relații n-n pentru articole
+  // Conference.belongsToMany(Article, { through: "ConferenceArticles", as: "ArticlesInConference", foreignKey: "ConferenceId" });
+  // Article.belongsToMany(Conference, { through: "ConferenceArticles", as: "ConferencesForArticle", foreignKey: "ArticleId" });
 }
 
-// fct pt db init
-async function DB_Init() {
-  await Create_DB(); // Creare bd
-  FK_Config(); // config relatii
-  await User.sync({ alter: true });
-  await Conference.sync({ alter: true });
-  await Article.sync({ alter: true });
-  console.log('Tabelele au fost sincronizate cu succes.');
-}
+
+const DB_Init = async () => {
+  try {
+    await Create_DB(); // Creare bd
+    FK_Config(); // Configurare relații
+
+    // Relațiile trebuie definite înainte de sincronizare
+    Conference.belongsToMany(User, { 
+      through: "ConferenceReviewers", 
+      as: "Reviewers", 
+      foreignKey: "ConferenceId" 
+    });
+
+    User.belongsToMany(Conference, { 
+      through: "ConferenceReviewers", 
+      as: "ReviewerConferences", 
+      foreignKey: "UserId" 
+    });
+
+    // Sincronizare bazei de date
+    await db.sync({ alter: true }); // Sincronizează baza de date
+    console.log("Tabelele au fost sincronizate cu succes!");
+  } catch (err) {
+    console.error("Eroare la sincronizarea bazei de date:", err);
+  }
+};
+
+// // fct pt db init
+// async function DB_Init() {
+//   await Create_DB(); // Creare bd
+//   FK_Config(); // config relatii
+//   await User.sync({ alter: true });
+//   await Conference.sync({ alter: true });
+//   await Article.sync({ alter: true });
+//   console.log('Tabelele au fost sincronizate cu succes.');
+// }
 
 export default DB_Init;
 

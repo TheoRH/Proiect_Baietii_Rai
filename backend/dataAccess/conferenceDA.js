@@ -1,5 +1,6 @@
 import Conference from '../entities/Conferinte.js';
 import User from '../entities/User.js';
+import ConferenceReviewers from '../entities/ConferenceReviewers.js';
 
 export async function addReviewerToConference(conferenceId, reviewerId) {
   try {
@@ -14,6 +15,22 @@ export async function addReviewerToConference(conferenceId, reviewerId) {
     return { message: 'Reviewer adăugat cu succes la conferință.' };
   } catch (error) {
     console.error('Eroare la alocarea reviewerului:', error);
+    throw error;
+  }
+}
+
+//functie de sterge reviewer din conferinta
+export async function removeReviewerFromConference(conferenceId, reviewerId) {
+  try {
+    const result = await ConferenceReviewers.destroy({
+      where: {
+        ConferenceId: conferenceId,
+        UserId: reviewerId,
+      },
+    });
+    return result > 0; // Returnează true dacă ștergerea a avut loc
+  } catch (error) {
+    console.error('Eroare la ștergerea reviewerului din baza de date:', error);
     throw error;
   }
 }

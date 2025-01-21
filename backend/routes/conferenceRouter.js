@@ -1,12 +1,13 @@
 import express from 'express';
 import authenticateToken from '../middleware/authenticateToken.js';
-import { createConference, getConferences, getConferenceById, deleteConference, addReviewerToConference} from "../dataAccess/conferenceDA.js";
+import { createConference, getConferences, getConferenceById, deleteConference, addReviewerToConference, removeReviewerFromConference} from "../dataAccess/conferenceDA.js";
 
 const conferenceRouter = express.Router();
 conferenceRouter.use(authenticateToken); // Protejeaza toate rutele
 
 // Rute pentru conferinte
-conferenceRouter.post('/conference/:id/reviewers', async (req, res) => {
+conferenceRouter.route('/conference/:id/reviewers')
+.post( async (req, res) => {
   try {
     const { id: conferenceId } = req.params;
     const { reviewerId } = req.body;
@@ -32,6 +33,51 @@ conferenceRouter.post('/conference/:id/reviewers', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'A apărut o eroare la alocarea reviewerului.' });
+  }
+})
+.get(async(req,res)=>{
+  try{
+    const { id: conferenceId } = req.params;
+    const conference = await getConferenceById(conferenceId);
+    if(!conference){
+      return res.status(404).json({message: 'Conferința nu a fost găsită.'});
+    }
+    res.status(200).json(conference.Reviewers);
+  }catch(error){
+    console.error(error);
+    res.status(500).json({message: 'A apărut o eroare la obținerea reviewerilor.'});
+  }
+})
+.delete(async (req, res) => {
+  try {
+    const { id: conferenceId } = req.params;
+    const { reviewerId } = req.body; // Obține ID-ul reviewerului din corpul cererii
+    const { id: userId } = req.user; // ID-ul utilizatorului din token
+
+    if (!reviewerId) {
+      return res.status(400).json({ message: 'ID-ul reviewerului este necesar.' });
+    }
+
+    // Verifică dacă utilizatorul logat este organizatorul conferinței
+    const conference = await getConferenceById(conferenceId);
+    if (!conference) {
+      return res.status(404).json({ message: 'Conferința nu a fost găsită.' });
+    }
+
+    if (conference.OrganizerId !== userId) {
+      return res.status(403).json({ message: 'Nu aveți permisiunea de a șterge revieweri pentru această conferință.' });
+    }
+
+    // Elimină reviewerul din conferință
+    const result = await removeReviewerFromConference(conferenceId, reviewerId);
+    if (!result) {
+      return res.status(404).json({ message: 'Reviewerul nu a fost găsit sau nu este alocat acestei conferințe.' });
+    }
+
+    res.status(200).json({ message: 'Reviewer eliminat cu succes.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'A apărut o eroare la ștergerea reviewerului.' });
   }
 });
 

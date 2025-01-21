@@ -8,9 +8,14 @@ class ConferenceStore {
   error = null;
 
   constructor() {
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      fetchConferences: true,
+      addConference: true,
+      deleteConference: true,
+      resetConferences: true,
+    });
 
-    // Autorun pentru reload
+    // Autorun pentru gestionarea conferințelor la logare
     autorun(() => {
       if (authStore.isLoggedIn()) {
         this.fetchConferences();
@@ -26,18 +31,18 @@ class ConferenceStore {
       return;
     }
 
-    this.isLoading = true;
-    this.error = null;
+    this.setLoading(true);
+    this.setError(null);
     try {
       const response = await axiosInstance.get('/conference', {
         headers: { Authorization: `Bearer ${authStore.getToken()}` },
       });
-      this.conferences = response.data;
+      this.setConferences(response.data);
     } catch (error) {
       console.error('Eroare la obținerea conferințelor:', error.response?.data || error.message);
-      this.error = error.response?.data?.message || 'Eroare la obținerea conferințelor.';
+      this.setError(error.response?.data?.message || 'Eroare la obținerea conferințelor.');
     } finally {
-      this.isLoading = false;
+      this.setLoading(false);
     }
   }
 
@@ -46,49 +51,59 @@ class ConferenceStore {
       console.warn('Token lipsă, nu se poate adăuga conferința.');
       return;
     }
-  
+
     try {
       const response = await axiosInstance.post('/conference', conferenceData, {
         headers: { Authorization: `Bearer ${authStore.getToken()}` },
       });
-  
+
       const newConference = response.data;
-  
-      // Actualizăm lista fără a necesita refresh
-      this.conferences = [...this.conferences, newConference];
+
+      // Adaugă conferința în lista existentă
+      this.setConferences([...this.conferences, newConference]);
     } catch (error) {
       console.error('Eroare la adăugarea conferinței:', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || 'Eroare la adăugarea conferinței.');
     }
   }
-  
-
 
   async deleteConference(conferenceId) {
     if (!authStore.getToken()) {
       console.warn('Token lipsă, nu se poate șterge conferința.');
       return;
     }
-  
+
     try {
       await axiosInstance.delete(`/conference/${conferenceId}`, {
         headers: { Authorization: `Bearer ${authStore.getToken()}` },
       });
-  
-      // Eliminăm conferința din listă
-      this.conferences = this.conferences.filter(
-        (conference) => conference.ConferenceId !== conferenceId
+
+      // Elimină conferința din listă
+      this.setConferences(
+        this.conferences.filter((conference) => conference.ConferenceId !== conferenceId)
       );
     } catch (error) {
       console.error('Eroare la ștergerea conferinței:', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || 'Eroare la ștergerea conferinței.');
     }
   }
-  
 
   resetConferences() {
     this.conferences = [];
     this.error = null;
+  }
+
+  // Metode pentru modificarea stării observabile
+  setLoading(loading) {
+    this.isLoading = loading;
+  }
+
+  setError(error) {
+    this.error = error;
+  }
+
+  setConferences(conferences) {
+    this.conferences = conferences;
   }
 }
 

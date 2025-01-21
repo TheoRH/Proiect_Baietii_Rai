@@ -8,7 +8,10 @@ class ArticleStore {
   error = null;
 
   constructor() {
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      fetchArticles: true,
+      resetArticles: true,
+    });
 
     // Autorun pentru gestionarea articolelor
     autorun(() => {
@@ -26,24 +29,38 @@ class ArticleStore {
       return;
     }
 
-    this.isLoading = true;
-    this.error = null;
+    this.setLoading(true);
+    this.setError(null);
+
     try {
       const response = await axiosInstance.get('/article', {
         headers: { Authorization: `Bearer ${authStore.getToken()}` },
       });
-      this.articles = response.data;
+      this.setArticles(response.data);
     } catch (error) {
       console.error('Eroare la obținerea articolelor:', error.response?.data || error.message);
-      this.error = error.response?.data?.message || 'Eroare la obținerea articolelor.';
+      this.setError(error.response?.data?.message || 'Eroare la obținerea articolelor.');
     } finally {
-      this.isLoading = false;
+      this.setLoading(false);
     }
   }
 
   resetArticles() {
-    this.articles = [];
-    this.error = null;
+    this.setArticles([]);
+    this.setError(null);
+  }
+
+  // Metode pentru modificarea observabilelor
+  setLoading(value) {
+    this.isLoading = value;
+  }
+
+  setError(value) {
+    this.error = value;
+  }
+
+  setArticles(value) {
+    this.articles = value;
   }
 }
 

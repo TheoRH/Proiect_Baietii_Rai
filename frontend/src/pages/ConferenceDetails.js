@@ -77,6 +77,23 @@ const ConferenceDetails = () => {
     }
   };
 
+  const handleRemoveReviewer = async (reviewerId) => {
+    try {
+      await axiosInstance.delete(`/conference/${id}/reviewers`, {
+        data: { reviewerId },
+        headers: { Authorization: `Bearer ${authStore.getToken()}` },
+      });
+      setMessage('Reviewer eliminat cu succes!');
+      const response = await axiosInstance.get(`/conference/${id}/reviewers`, {
+        headers: { Authorization: `Bearer ${authStore.getToken()}` },
+      });
+      setAllocatedReviewers(response.data);
+    } catch (error) {
+      console.error('Eroare la ștergerea reviewerului:', error);
+      setMessage('Nu s-a putut șterge reviewerul.');
+    }
+  };
+
   if (!conference) {
     return <div>Se încarcă detaliile conferinței...</div>;
   }
@@ -94,8 +111,23 @@ const ConferenceDetails = () => {
       <h3>Revieweri alocați:</h3>
       {conference.Reviewers?.length > 0 ? (
         <ul>
-          {conference.Reviewers.map((reviewer) => (
-            <li key={reviewer.UserId}>{reviewer.username}</li>
+         {allocatedReviewers.map((reviewer) => (
+            <li key={reviewer.UserId} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {reviewer.username}
+              <button
+                onClick={() => handleRemoveReviewer(reviewer.UserId)}
+                style={{
+                  backgroundColor: 'red',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  padding: '5px',
+                  cursor: 'pointer',
+                }}
+              >
+                Șterge
+              </button>
+            </li>
           ))}
         </ul>
       ) : (

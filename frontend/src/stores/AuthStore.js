@@ -1,14 +1,32 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, action } from 'mobx';
 
 class AuthStore {
   token = null;
   user = null;
 
   constructor() {
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      login: action,
+      logout: action,
+    });
     // Initializează din localStorage dacă există
-    this.token = localStorage.getItem('token');
-    this.user = JSON.parse(localStorage.getItem('user'));
+    this.loadFromStorage();
+  }
+
+  loadFromStorage() {
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (storedToken) {
+      this.token = storedToken;
+    }
+    if (storedUser) {
+      try {
+        this.user = JSON.parse(storedUser);
+      } catch (error) {
+        console.error('Eroare la parsarea utilizatorului din localStorage:', error);
+      }
+    }
   }
 
   login(data) {
@@ -16,30 +34,33 @@ class AuthStore {
       console.error('Răspuns invalid de la backend:', data);
       return;
     }
-    this.token = data.token; // Salvează token-ul în instanța curentă
-    this.user = data.user; // Salvează informațiile despre utilizator
-    localStorage.setItem('token', data.token); // Salvează token-ul în localStorage
-    localStorage.setItem('user', JSON.stringify(data.user)); // Salvează utilizatorul în localStorage
+    this.token = data.token;
+    this.user = data.user;
+
+    // Salvează în localStorage
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
   }
-  
 
   logout() {
     this.token = null;
     this.user = null;
+
+    // Elimină din localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   }
 
   getToken() {
-    return this.token || localStorage.getItem('token');
+    return this.token;
   }
 
   getUser() {
-    return this.user || JSON.parse(localStorage.getItem('user'));
+    return this.user;
   }
 
   isLoggedIn() {
-    return !!this.getToken();
+    return !!this.token;
   }
 }
 
