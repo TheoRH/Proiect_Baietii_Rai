@@ -9,12 +9,24 @@ conferenceRouter.use(authenticateToken); // Protejeaza toate rutele
 conferenceRouter.post('/conference/:id/reviewers', async (req, res) => {
   try {
     const { id: conferenceId } = req.params;
-    const { reviewerId } = req.body; // ID-ul reviewerului
+    const { reviewerId } = req.body;
+    const { id: userId } = req.user; // ID-ul utilizatorului din token
 
     if (!reviewerId) {
       return res.status(400).json({ message: 'ID-ul reviewerului este necesar.' });
     }
 
+    // Verifică dacă utilizatorul logat este organizatorul conferinței
+    const conference = await getConferenceById(conferenceId);
+    if (!conference) {
+      return res.status(404).json({ message: 'Conferința nu a fost găsită.' });
+    }
+
+    if (conference.OrganizerId !== userId) {
+      return res.status(403).json({ message: 'Nu aveți permisiunea de a aloca revieweri pentru această conferință.' });
+    }
+
+    // Alocare reviewer
     const result = await addReviewerToConference(conferenceId, reviewerId);
     res.status(200).json(result);
   } catch (error) {
@@ -22,6 +34,7 @@ conferenceRouter.post('/conference/:id/reviewers', async (req, res) => {
     res.status(500).json({ message: 'A apărut o eroare la alocarea reviewerului.' });
   }
 });
+
 
 conferenceRouter.route('/conference')
   .post(async (req, res) => {

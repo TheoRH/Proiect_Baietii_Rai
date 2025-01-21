@@ -30,7 +30,16 @@ export async function createConference(data) {
 
 export async function getConferenceById(id) {
   try {
-    const conference = await Conference.findByPk(id);
+    const conference = await Conference.findByPk(id, {
+      include: [
+        {
+          model: User,
+          as: "Reviewers", // Afișează reviewerii alocați
+          attributes: ["UserId", "username"], // Alege doar atributele necesare
+        },
+      ],
+    });
+
     if (!conference) {
       throw new Error('Conferința nu a fost găsită.');
     }

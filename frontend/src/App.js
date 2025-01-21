@@ -6,6 +6,8 @@ import Home from './pages/Home';
 import Conferinte from './pages/Conferinte';
 import Articole from './pages/Articole';
 import Register from './pages/Register';
+import ConferenceDetails from './pages/ConferenceDetails';
+
 
 const App = observer(() => {
   const navStyle = {
@@ -71,6 +73,7 @@ const App = observer(() => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/conferinte" element={<Conferinte />} />
+        <Route path="/conferinte/:id" element={<ConferenceDetails />} /> {/* Noua rută */}
         <Route path="/articole" element={<Articole />} />
       </Routes>
     </div>
