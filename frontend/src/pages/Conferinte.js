@@ -4,6 +4,7 @@ import conferenceStore from '../stores/conferenceStore';
 import authStore from '../stores/AuthStore';
 import ConferinteList from '../components/ConferinteList';
 
+
 const Conferinte = observer(() => {
   const [showForm, setShowForm] = useState(false); // Stare pentru vizibilitatea formularului
   const [newConference, setNewConference] = useState({

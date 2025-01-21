@@ -1,5 +1,12 @@
 import db from '../config/dbConfig.js';
 import Sequelize from 'sequelize';
+import Conference from './Conferinte.js';
+
+// User.belongsToMany(Conference, {
+//   through: 'ConferenceReviewers',
+//   as: 'Conferences',
+//   foreignKey: 'UserId',
+// });
 
 const User = db.define("User", {
   UserId: {

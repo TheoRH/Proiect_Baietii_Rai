@@ -27,6 +27,10 @@ app.use('/api', userRouter); // Rute pentru utilizatori
 app.use('/api', articleRouter); // Rute pentru articole
 app.use('/api', conferenceRouter); // Rute pentru conferinte
 
+db.sync({ alter: true }) // sau { force: true } pentru recreare completă
+  .then(() => console.log('Tabelele au fost sincronizate cu succes!'))
+  .catch((err) => console.error('Eroare la sincronizarea tabelelor:', err));
+
 // Pornire server
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
