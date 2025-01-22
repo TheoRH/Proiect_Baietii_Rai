@@ -3,32 +3,34 @@ import articleStore from '../stores/articleStore';
 import authStore from '../stores/AuthStore';
 import axiosInstance from '../axiosConfig';
 
-function ArticolCard({ articol, onRemove,showActions = true }) {
+function ArticolCard({ articol, onRemove, showActions = true, onUpdate }) {
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [isFading, setIsFading] = useState(false);
-  const [conferenceName, setConferenceName] = useState(''); // Pentru a stoca numele conferinței
+  const [conferenceName, setConferenceName] = useState('');
+  const [articolState, setArticol] = useState(articol);
+  const [newVersion, setNewVersion] = useState('');
+  const [showNewVersionField, setShowNewVersionField] = useState(false);
 
   const isAuthor = authStore.getUser()?.role === 'author';
   const isReviewer = authStore.getUser()?.role === 'reviewer';
 
-  // Funcția pentru a obține numele conferinței
   const fetchConferenceName = async (articleId) => {
     try {
       const response = await axiosInstance.get(`/article/${articleId}/conference-name`);
-      setConferenceName(response.data); // Setează numele conferinței
+      setConferenceName(response.data);
     } catch (error) {
       console.error('Eroare la obținerea numelui conferinței:', error);
-      setConferenceName('Nespecificată'); // Fallback în caz de eroare
+      setConferenceName('Nespecificată');
     }
   };
 
-  // Apelă funcția pentru a obține numele conferinței
   useEffect(() => {
-    fetchConferenceName(articol.ArticleId);
-  }, [articol.ArticleId]);
+    fetchConferenceName(articolState.ArticleId);
+  }, [articolState.ArticleId]);
+
   const getStatusStyle = () => {
-    switch (articol.status.toLowerCase()) {
+    switch (articolState.status.toLowerCase()) {
       case 'accepted':
         return { bg: '#d4edda', text: '#155724' };
       case 'rejected':
@@ -49,7 +51,11 @@ function ArticolCard({ articol, onRemove,showActions = true }) {
     }
 
     try {
-      await articleStore.sendFeedback(articol.ArticleId, feedback);
+      await articleStore.sendFeedback(articolState.ArticleId, feedback);
+      setArticol((prev) => ({
+        ...prev,
+        feedback: feedback.trim(),
+      }));
       setFeedback('');
       alert('Feedback trimis cu succes!');
     } catch (err) {
@@ -58,24 +64,33 @@ function ArticolCard({ articol, onRemove,showActions = true }) {
   };
 
   const handleSubmitNewVersion = async () => {
+    if (!newVersion.trim()) {
+      setError('Conținutul noii versiuni nu poate fi gol.');
+      return;
+    }
+
     try {
-      const newContent = prompt('Introduceți conținutul noii versiuni:');
-      if (newContent) {
-        await articleStore.submitNewVersion(articol.ArticleId, newContent);
-        setError('');
-      }
+      await articleStore.submitNewVersion(articolState.ArticleId, newVersion);
+      setArticol((prev) => ({
+        ...prev,
+        content: newVersion,
+        feedback: '', // Golește feedback-ul după trimitere
+      }));
+      setNewVersion('');
+      setShowNewVersionField(false);
+      setError('');
     } catch (err) {
-      setError('A apărut o eroare la actualizarea articolului.');
+      setError('A apărut o eroare la trimiterea noii versiuni.');
     }
   };
 
   const handleStatusChange = async (status) => {
     try {
-      await articleStore.updateArticleStatus(articol.ArticleId, status);
+      await articleStore.updateArticleStatus(articolState.ArticleId, status);
       setIsFading(true);
       setTimeout(() => {
         if (onRemove) {
-          onRemove(articol.ArticleId);
+          onRemove(articolState.ArticleId);
         }
       }, 300);
     } catch (err) {
@@ -97,8 +112,8 @@ function ArticolCard({ articol, onRemove,showActions = true }) {
         fontFamily: 'Arial, sans-serif',
       }}
     >
-      <h3 style={{ color: '#2c3e50', marginBottom: '10px', fontSize: '1.5em' }}>{articol.title}</h3>
-      <p style={{ fontStyle: 'italic', marginBottom: '10px', color: '#7f8c8d' }}>Autor: {articol.authorName}</p>
+      <h3 style={{ color: '#2c3e50', marginBottom: '10px', fontSize: '1.5em' }}>{articolState.title}</h3>
+      <p style={{ fontStyle: 'italic', marginBottom: '10px', color: '#7f8c8d' }}>Autor: {articolState.authorName}</p>
       <p
         style={{
           color: statusStyle.text,
@@ -110,13 +125,12 @@ function ArticolCard({ articol, onRemove,showActions = true }) {
           fontSize: '1em',
         }}
       >
-        Status: {articol.status}
+        Status: {articolState.status}
       </p>
       <p style={{ color: '#34495e', marginTop: '10px', fontSize: '0.9em' }}>
-        Data trimiterii: {new Date(articol.submittedDate).toLocaleDateString()}
+        Data trimiterii: {new Date(articolState.submittedDate).toLocaleDateString()}
       </p>
 
-      {/* Afișare nume conferință */}
       <p style={{ color: '#7f8c8d', marginTop: '10px', fontSize: '0.9em' }}>
         Conferință: <strong>{conferenceName || 'Nespecificată'}</strong>
       </p>
@@ -130,10 +144,10 @@ function ArticolCard({ articol, onRemove,showActions = true }) {
         }}
       >
         <h4 style={{ marginBottom: '10px', color: '#2c3e50' }}>Conținutul articolului:</h4>
-        <p style={{ whiteSpace: 'pre-wrap', color: '#2c3e50', lineHeight: '1.6' }}>{articol.content}</p>
+        <p style={{ whiteSpace: 'pre-wrap', color: '#2c3e50', lineHeight: '1.6' }}>{articolState.content}</p>
       </div>
-        
-      {showActions && articol.feedback && (
+
+      {showActions && articolState.feedback && (
         <div
           style={{
             backgroundColor: '#fdfefe',
@@ -144,26 +158,60 @@ function ArticolCard({ articol, onRemove,showActions = true }) {
           }}
         >
           <strong style={{ color: '#34495e', display: 'block', marginBottom: '5px' }}>Feedback:</strong>
-          <p style={{ color: '#2c3e50', lineHeight: '1.6' }}>{articol.feedback}</p>
+          <p style={{ color: '#2c3e50', lineHeight: '1.6' }}>{articolState.feedback}</p>
         </div>
       )}
 
-      {isAuthor && articol.feedback && (
-        <button
-          onClick={handleSubmitNewVersion}
-          style={{
-            marginTop: '15px',
-            padding: '10px 20px',
-            backgroundColor: '#2980b9',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '1em',
-          }}
-        >
-          Trimite o versiune nouă
-        </button>
+      {isAuthor && (
+        <>
+          <button
+            onClick={() => setShowNewVersionField(true)}
+            style={{
+              marginTop: '15px',
+              padding: '10px 20px',
+              backgroundColor: '#2980b9',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '1em',
+            }}
+          >
+            Trimite o versiune nouă
+          </button>
+          {showNewVersionField && (
+            <div style={{ marginTop: '15px' }}>
+              <textarea
+                placeholder="Introduceți conținutul noii versiuni"
+                value={newVersion}
+                onChange={(e) => setNewVersion(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '100px',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: '1px solid #ccc',
+                  fontSize: '0.9em',
+                }}
+              />
+              <button
+                onClick={handleSubmitNewVersion}
+                style={{
+                  marginTop: '10px',
+                  padding: '10px 20px',
+                  backgroundColor: '#27ae60',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1em',
+                }}
+              >
+                Trimite
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {showActions && isReviewer && (

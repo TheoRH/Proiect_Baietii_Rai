@@ -4,37 +4,84 @@ import authStore from '../stores/AuthStore';
 const Home = () => {
   const user = authStore.getUser();
 
+  const styles = {
+    container: {
+      padding: '20px',
+      maxWidth: '800px',
+      margin: '0 auto',
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: '#f9f9f9',
+      borderRadius: '8px',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    },
+    title: {
+      fontSize: '28px',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: '20px',
+      color: '#333',
+    },
+    subtitle: {
+      fontSize: '20px',
+      fontWeight: 'bold',
+      marginBottom: '10px',
+      color: '#555',
+    },
+    paragraph: {
+      fontSize: '16px',
+      lineHeight: '1.6',
+      color: '#444',
+      marginBottom: '20px',
+    },
+    button: {
+      padding: '10px 20px',
+      fontSize: '16px',
+      fontWeight: 'bold',
+      color: '#fff',
+      border: 'none',
+      borderRadius: '5px',
+      cursor: 'pointer',
+    },
+    authorButton: {
+      backgroundColor: '#007bff',
+    },
+    reviewerButton: {
+      backgroundColor: '#28a745',
+    },
+    organizerButton: {
+      backgroundColor: '#ffc107',
+    },
+    guestContainer: {
+      textAlign: 'center',
+    },
+  };
+
   // Dacă utilizatorul nu este autentificat
   if (!user) {
     return (
-      <div>
-        <h1>Bine ai venit!</h1>
-        <p>Te rugăm să te autentifici pentru a accesa funcționalitățile platformei.</p>
+      <div style={styles.container}>
+        <h1 style={styles.title}>Bine ai venit!</h1>
+        <p style={styles.paragraph}>
+          Te rugăm să te autentifici pentru a accesa funcționalitățile platformei.
+        </p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Acasă</h1>
-      <p>Bine ai venit, {user.username}!</p>
+    <div style={styles.container}>
+      <h1 style={styles.title}>Acasă</h1>
+      <p style={styles.paragraph}>Bine ai venit, <strong>{user.username}</strong>!</p>
 
       {user.role === 'author' && (
         <div>
-          <h2>Secțiune pentru autori</h2>
-          <p>Aici poți trimite articole și verifica starea acestora.</p>
-          {/* Adaugă un buton sau un link către pagina de trimitere a articolelor */}
+          <h2 style={styles.subtitle}>Secțiune pentru autori</h2>
+          <p style={styles.paragraph}>
+            Aici poți trimite articole și verifica starea acestora.
+          </p>
           <button
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#007bff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
+            style={{ ...styles.button, ...styles.authorButton }}
             onClick={() => {
-              // Navighează către pagina articolelor
               window.location.href = '/articole';
             }}
           >
@@ -45,20 +92,13 @@ const Home = () => {
 
       {user.role === 'reviewer' && (
         <div>
-          <h2>Secțiune pentru revieweri</h2>
-          <p>Aici poți examina articole și oferi feedback.</p>
-          {/* Adaugă un buton sau un link către pagina de revizuire */}
+          <h2 style={styles.subtitle}>Secțiune pentru revieweri</h2>
+          <p style={styles.paragraph}>
+            Aici poți examina articole și oferi feedback.
+          </p>
           <button
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#28a745',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
+            style={{ ...styles.button, ...styles.reviewerButton }}
             onClick={() => {
-              // Navighează către pagina articolelor de revizuit
               window.location.href = '/articole';
             }}
           >
@@ -69,20 +109,13 @@ const Home = () => {
 
       {user.role === 'organizer' && (
         <div>
-          <h2>Secțiune pentru organizatori</h2>
-          <p>Aici poți crea conferințe și gestiona articolele asociate.</p>
-          {/* Adaugă un buton sau un link către pagina de administrare */}
+          <h2 style={styles.subtitle}>Secțiune pentru organizatori</h2>
+          <p style={styles.paragraph}>
+            Aici poți crea conferințe și gestiona articolele asociate.
+          </p>
           <button
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#ffc107',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
+            style={{ ...styles.button, ...styles.organizerButton }}
             onClick={() => {
-              // Navighează către pagina de administrare
               window.location.href = '/conferinte';
             }}
           >
