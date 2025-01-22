@@ -12,6 +12,23 @@ const ConferenceDetails = () => {
   const [message, setMessage] = useState('');
   const [articleTitle, setArticleTitle] = useState('');
   const [articleContent, setArticleContent] = useState('');
+  const [isParticipating, setIsParticipating] = useState(false);
+
+  // Fetch participare utilizator la conferință
+  useEffect(() => {
+    const checkParticipation = async () => {
+      try {
+        const response = await axiosInstance.get(`/conference/${id}/authors/participation`, {
+          headers: { Authorization: `Bearer ${authStore.getToken()}` },
+        });
+        setIsParticipating(response.data.isParticipating);
+      } catch (error) {
+        console.error('Eroare la verificarea participării:', error);
+      }
+    };
+
+    checkParticipation();
+  }, [id]);
 
   // Fetch detalii conferință, lista de revieweri și reviewerii alocați
   useEffect(() => {
@@ -41,28 +58,27 @@ const ConferenceDetails = () => {
     updateAllocatedReviewers();
   }, [id]);
 
-  //Functie pentru trimiterea unui articol
+  // Functie pentru trimiterea unui articol
   const handleProposeArticle = async () => {
     if (!articleTitle || !articleContent) {
       setMessage('Completează toate câmpurile pentru a propune un articol.');
       return;
     }
-  
+
     try {
-      console.log('Titlu articol:', articleTitle);
-      console.log('Conținut articol:', articleContent);
       const authorName = authStore.getUser()?.username; // Obține numele utilizatorului autentificat
       if (!authorName) {
         setMessage('Nu am putut determina numele autorului. Verifică autentificarea.');
         return;
       }
-  
+
       await axiosInstance.post(
         `/conference/${id}/articles`,
         { title: articleTitle, content: articleContent, authorName }, // Trimite și authorName
         { headers: { Authorization: `Bearer ${authStore.getToken()}` } }
       );
       setMessage('Articol propus cu succes!');
+      updateAllocatedReviewers(); // Actualizează automat lista
       setArticleTitle('');
       setArticleContent('');
     } catch (error) {
@@ -95,7 +111,8 @@ const ConferenceDetails = () => {
       await axiosInstance.post(
         `/conference/${id}/reviewers`,
         { reviewerId: selectedReviewer },
-        { headers: { Authorization: `Bearer ${authStore.getToken()}` } }
+        { headers: { Authorization: `Bearer ${authStore.getToken()}` }
+        }
       );
       setMessage('Reviewer alocat cu succes!');
       setSelectedReviewer('');
@@ -120,10 +137,13 @@ const ConferenceDetails = () => {
     }
   };
 
+  const isOrganizer = authStore.getUser()?.role === 'organizer' && 
+                      conference?.OrganizerId === authStore.getUser()?.id;
+
   if (!conference) {
     return <div>Se încarcă detaliile conferinței...</div>;
   }
-  
+
   return (
     <div style={{ padding: '20px' }}>
       <h2>Detalii Conferință</h2>
@@ -133,55 +153,33 @@ const ConferenceDetails = () => {
       <p><strong>Locație:</strong> {conference.location}</p>
       <p><strong>Participanți Maximi:</strong> {conference.maxParticipants}</p>
       <p><strong>Organizator:</strong> {conference.organizerName}</p>
-  
+
       <h3>Revieweri alocați:</h3>
       {allocatedReviewers.length > 0 ? (
         <ul>
           {allocatedReviewers.map((reviewer) => (
             <li key={reviewer.UserId} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {reviewer.username}
-              <button
-                onClick={() => handleRemoveReviewer(reviewer.UserId)}
-                style={{
-                  backgroundColor: 'red',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '3px',
-                  padding: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                Șterge
-              </button>
+              {isOrganizer && (
+                <button
+                  onClick={() => handleRemoveReviewer(reviewer.UserId)}
+                  style={{
+                    backgroundColor: 'red',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '3px',
+                    padding: '5px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Șterge
+                </button>
+              )}
             </li>
           ))}
         </ul>
       ) : (
         <p>Nu există revieweri alocați.</p>
-      )}
-  
-      {authStore.getUser()?.role === 'organizer' && conference.OrganizerId === authStore.getUser()?.id && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>Alocare Reviewer</h3>
-          <select
-            value={selectedReviewer}
-            onChange={(e) => setSelectedReviewer(e.target.value)}
-            style={{ marginRight: '10px', padding: '5px' }}
-          >
-            <option value="">Selectează un reviewer</option>
-            {reviewers.map((reviewer) => (
-              <option key={reviewer.UserId} value={reviewer.UserId}>
-                {reviewer.username}
-              </option>
-            ))}
-          </select>
-          <button onClick={handleAllocateReviewer}>Alocă</button>
-          {message && (
-            <p style={{ marginTop: '10px', color: message.includes('succes') ? 'green' : 'red' }}>
-              {message}
-            </p>
-          )}
-        </div>
       )}
 
       {authStore.getUser()?.role === 'author' && (
@@ -231,10 +229,7 @@ const ConferenceDetails = () => {
           )}
         </div>
       )}
-
-
     </div>
-    
   );
 };
 

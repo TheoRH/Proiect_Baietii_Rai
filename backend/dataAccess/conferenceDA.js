@@ -3,24 +3,47 @@ import User from '../entities/User.js';
 import ConferenceReviewers from '../entities/ConferenceReviewers.js';
 import ConferenceAuthors from '../entities/ConferenceAuthors.js';
 import Article from '../entities/Articole.js';
+import Sequelize from 'sequelize';
 
 //functie de adaugat articole
 export async function proposeArticle({ title, content, conferenceId, authorName }) {
   try {
+    // Creare articol în tabela articles
     const article = await Article.create({
       title,
       content,
       authorName,
       status: 'pending',
       submittedDate: new Date(),
-      ConferenceId: conferenceId, // Asociază articolul cu conferința
+      ConferenceId: conferenceId,
     });
 
-    const conference = await Conference.findByPk(conferenceId);
-    if (conference) {
-      await conference.addArticle(article); // Adaugă articolul la conferință
-    } else {
-      throw new Error('Conferința specificată nu a fost găsită.');
+    // Verifică dacă articolul are deja 2 revieweri alocați
+    const existingReviewers = await ConferenceReviewers.count({
+      where: { ConferenceId: conferenceId },
+    });
+
+    if (existingReviewers >= 2) {
+      return { message: 'Articolul are deja 2 revieweri alocați.' };
+    }
+
+    // Găsește doi revieweri random din tabela User
+    const reviewers = await User.findAll();
+    // Filtrăm utilizatorii cu rolul 'reviewer'
+    const filteredReviewers = reviewers.filter(reviewer => reviewer.role === 'reviewer');
+    // Amestecăm lista de revieweri
+    const shuffledReviewers = filteredReviewers.sort(() => 0.5 - Math.random());
+    // Selectăm primii doi revieweri din lista amestecată
+    const selectedReviewers = shuffledReviewers.slice(0, 2);
+
+    // Verifică dacă există suficienți revieweri disponibili
+    if (selectedReviewers.length < 2) {
+      throw new Error('Nu există suficienți revieweri disponibili pentru a aloca articolul.');
+    }
+
+    // Alocă reviewerii articolului
+    for (const reviewer of selectedReviewers) {
+      await addReviewerToConference(conferenceId, reviewer.UserId);
     }
 
     return article;
@@ -29,6 +52,8 @@ export async function proposeArticle({ title, content, conferenceId, authorName 
     throw new Error('Nu s-a putut crea articolul.');
   }
 }
+
+
 
 //functie de a verifica daca autorul este inregistrat
 export async function checkAuthorRegistration(conferenceId, userId) {
@@ -50,6 +75,7 @@ export async function checkAuthorRegistration(conferenceId, userId) {
 //functie de a alatura autor
 export async function addAuthorToConference(conferenceId, userId) {
   try {
+  
     await ConferenceAuthors.create({
       ConferenceId: conferenceId,
       UserId: userId,

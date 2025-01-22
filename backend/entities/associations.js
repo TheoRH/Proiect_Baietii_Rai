@@ -30,9 +30,27 @@ User.belongsToMany(Conference, {
 });
 
 
+
 // Adăugare relație hasMany pentru utilizarea metodei addArticle
 Conference.hasMany(Article, { foreignKey: 'ConferenceId' });
 Article.belongsTo(Conference, { foreignKey: 'ConferenceId' });
+
+// Relația N-N între Article și User prin ArticleReviewers
+
+Article.belongsToMany(User, {
+  through: 'ArticleReviewers',
+  as: 'Reviewers',
+  foreignKey: 'ArticleId',
+});
+
+User.belongsToMany(Article, {
+  through: 'ArticleReviewers',
+  as: 'ReviewedArticles',
+  foreignKey: 'UserId',
+});
+
+
+
 
 // Exportă modelele
 export { Conference, User, ConferenceAuthors, Article };

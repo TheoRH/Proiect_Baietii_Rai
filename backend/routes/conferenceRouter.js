@@ -61,6 +61,19 @@ conferenceRouter.route('/conference/:id/authors')
   }
 });
 
+conferenceRouter.get('/conference/:id/authors/participation', async (req, res) => {
+  try {
+    const { id: conferenceId } = req.params;
+    const { id: userId } = req.user;
+
+    const isParticipating = await checkAuthorRegistration(conferenceId, userId);
+
+    res.status(200).json({ isParticipating });
+  } catch (error) {
+    console.error('Eroare la verificarea participării:', error);
+    res.status(500).json({ message: 'A apărut o eroare la verificarea participării.' });
+  }
+});
 
 // Rute pentru conferinte
 conferenceRouter.route('/conference/:id/reviewers')

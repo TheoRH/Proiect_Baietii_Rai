@@ -3,11 +3,7 @@ import Sequelize from 'sequelize';
 
 
 const ConferenceAuthors = db.define('ConferenceAuthors', {
-    id: {
-      type: Sequelize.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
+   
     ConferenceId: {
       type: Sequelize.INTEGER,
       allowNull: false,

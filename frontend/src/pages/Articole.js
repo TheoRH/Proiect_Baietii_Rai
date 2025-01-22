@@ -7,7 +7,7 @@ import ArticolCard from '../components/ArticolCard';
 const Articole = observer(() => {
   useEffect(() => {
     if (authStore.isLoggedIn()) {
-      articleStore.fetchArticles();
+      articleStore.fetchArticles(); // Preia articolele filtrate de backend
     }
   }, [authStore.isLoggedIn()]);
 
