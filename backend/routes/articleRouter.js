@@ -1,6 +1,6 @@
 import express from 'express';
 import authenticateToken from '../middleware/authenticateToken.js';
-import { createArticle, getArticles, getArticleById, deleteArticle, updateArticleStatus } from "../dataAccess/articleDA.js";
+import { createArticle, getArticles, getArticleById, deleteArticle, updateArticleStatus, getArticlesByReviewer, getArticlesByAuthor } from "../dataAccess/articleDA.js";
 
 const articleRouter = express.Router();
 articleRouter.use(authenticateToken); // Protejeaza toate rutele
@@ -25,6 +25,28 @@ articleRouter.route('/article')
       res.status(500).json({ message: 'A apărut o eroare la obținerea articolelor.' });
     }
   });
+
+  articleRouter.route('/article/mine')
+  .get(async (req, res) => {
+    try {
+      const { role, id } = req.user;
+      let articles;
+
+      if (role === 'author') {
+        articles = await getArticlesByAuthor(id);
+      } else if (role === 'reviewer') {
+        articles = await getArticlesByReviewer(id);
+      } else {
+        return res.status(403).json({ message: 'Nu aveți permisiunea de a accesa aceste articole.' });
+      }
+
+      res.status(200).json(articles);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'A apărut o eroare la obținerea articolelor.' });
+    }
+  });
+
 
 articleRouter.route('/article/:id')
   .get(async (req, res) => {
@@ -58,5 +80,36 @@ articleRouter.route('/article/:id/status').patch(async (req, res) => {
     res.status(500).json({ message: 'A apărut o eroare la actualizarea statusului.' });
   }
 });
+
+articleRouter.route('/article/:id/feedback')
+  .post(async (req, res) => {
+    try {
+      const { feedback } = req.body;
+      const { id } = req.params;
+      const { id: reviewerId } = req.user;
+
+      await sendFeedback(id, reviewerId, feedback);
+      res.status(200).json({ message: 'Feedback trimis cu succes.' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'A apărut o eroare la trimiterea feedback-ului.' });
+    }
+  });
+
+articleRouter.route('/article/:id/update')
+  .patch(async (req, res) => {
+    try {
+      const { content } = req.body;
+      const { id } = req.params;
+      const { id: authorId } = req.user;
+
+      await updateArticleVersion(id, authorId, content);
+      res.status(200).json({ message: 'Versiunea articolului a fost actualizată.' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'A apărut o eroare la actualizarea articolului.' });
+    }
+  });
+
 
 export default articleRouter;

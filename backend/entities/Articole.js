@@ -1,5 +1,7 @@
 import db from '../config/dbConfig.js';
 import Sequelize from 'sequelize';
+import User from './User.js';
+
 
 const Article = db.define("Article", {
   ArticleId: {
@@ -37,5 +39,6 @@ const Article = db.define("Article", {
     },
   },
 });
+
 
 export default Article;

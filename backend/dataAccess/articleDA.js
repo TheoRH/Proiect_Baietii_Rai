@@ -1,10 +1,67 @@
 import Article from '../entities/Articole.js';
-
+import User from '../entities/User.js';
 export async function createArticle(data) {
   try {
     return await Article.create(data);
   } catch (error) {
     console.error('Eroare la crearea articolului:', error);
+    throw error;
+  }
+}
+export async function getArticlesByAuthor(authorId) {
+  try {
+    return await Article.findAll({ where: { UserId: authorId } });
+  } catch (error) {
+    console.error('Eroare la obținerea articolelor autorului:', error);
+    throw error;
+  }
+}
+
+export async function getArticlesByReviewer(reviewerId) {
+  try {
+    return await Article.findAll({
+      include: [
+        {
+          model: User,
+          as: 'Reviewers',
+          where: { UserId: reviewerId },
+        },
+      ],
+    });
+  } catch (error) {
+    console.error('Eroare la obținerea articolelor reviewerului:', error);
+    throw error;
+  }
+}
+
+export async function sendFeedback(articleId, reviewerId, feedback) {
+  try {
+    const article = await Article.findByPk(articleId);
+    if (!article) {
+      throw new Error('Articolul nu a fost găsit.');
+    }
+
+    article.feedback = feedback;
+    article.status = 'pending';
+    await article.save();
+  } catch (error) {
+    console.error('Eroare la trimiterea feedback-ului:', error);
+    throw error;
+  }
+}
+
+export async function updateArticleVersion(articleId, authorId, content) {
+  try {
+    const article = await Article.findOne({ where: { ArticleId: articleId, UserId: authorId } });
+    if (!article) {
+      throw new Error('Articolul nu a fost găsit sau nu aparține utilizatorului.');
+    }
+
+    article.content = content;
+    article.status = 'pending';
+    await article.save();
+  } catch (error) {
+    console.error('Eroare la actualizarea articolului:', error);
     throw error;
   }
 }

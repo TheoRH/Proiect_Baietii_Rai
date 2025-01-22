@@ -7,7 +7,7 @@ import ArticolCard from '../components/ArticolCard';
 const Articole = observer(() => {
   useEffect(() => {
     if (authStore.isLoggedIn()) {
-      articleStore.fetchArticles(); // Preia articolele filtrate de backend
+      articleStore.fetchUserArticles(); // Preia articolele filtrate pentru utilizatorul curent
     }
   }, [authStore.isLoggedIn()]);
 
@@ -25,7 +25,7 @@ const Articole = observer(() => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Articole Propuse</h2>
+      <h2>Articole</h2>
       {articleStore.articles.length === 0 ? (
         <p>Nu există articole disponibile.</p>
       ) : (

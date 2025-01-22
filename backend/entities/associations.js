@@ -51,6 +51,5 @@ User.belongsToMany(Article, {
 
 
 
-
 // Exportă modelele
 export { Conference, User, ConferenceAuthors, Article };
