@@ -1,6 +1,6 @@
 import express from 'express';
 import authenticateToken from '../middleware/authenticateToken.js';
-import { createArticle, getArticles, getArticleById, deleteArticle, updateArticleStatus, getArticlesByReviewer, getArticlesByAuthor, getArticlesForUser,sendFeedback,updateArticleVersion, getArticleWithConferenceName, getArticlesByConference   } from "../dataAccess/articleDA.js";
+import { createArticle, getArticles, getArticleById, deleteArticle, updateArticleStatus, getArticlesByReviewer, getArticlesByAuthor, getArticlesForUser,sendFeedback,updateArticleVersion, getConferenceNameByArticleId, getArticlesByConference   } from "../dataAccess/articleDA.js";
 
 
 
@@ -109,26 +109,30 @@ articleRouter.route('/article/:id/update')
     }
   });
 
+
+
+
   articleRouter.route('/conference/:id/articles').get(async (req, res) => {
     try {
-      const { id } = req.params; // ID-ul conferinței
+      const { id } = req.params; // Obține ConferenceId din URL
       const articles = await getArticlesByConference(id);
       res.status(200).json(articles);
     } catch (error) {
       console.error('Eroare la obținerea articolelor pentru conferință:', error);
-      res.status(500).json({ message: 'A apărut o eroare la obținerea articolelor.' });
+      res.status(500).json({ message: 'A apărut o eroare la obținerea articolelor pentru conferință.' });
     }
   });
+  
 
-  articleRouter.route('/conference/:id/with-conference').get(async (req, res) => {
+  articleRouter.route('/article/:id/conference-name').get(async (req, res) => {
     try {
-      const article = await getArticleWithConferenceName(req.params.id);
-      res.status(200).json(article);
+      const conferenceName = await getConferenceNameByArticleId(req.params.id);
+      res.status(200).send(conferenceName); // Trimite doar string-ul
     } catch (error) {
-      res.status(500).json({ message: 'Eroare la obținerea articolului.' });
+      console.error('Eroare în backend:', error);
+      res.status(500).send('Eroare la obținerea numelui conferinței.');
     }
   });
-
   
 
 

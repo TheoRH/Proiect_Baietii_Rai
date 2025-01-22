@@ -41,14 +41,15 @@ const ConferenceDetails = () => {
         console.error('Eroare la obținerea detaliilor conferinței:', error);
       }
     };
-
     const fetchArticles = async () => {
       try {
-        const response = await axiosInstance.get(`/conference/${id}/articles`);
-        setArticles(response.data);
+        const response = await axiosInstance.get(`/conference/${id}/articles`, {
+          headers: { Authorization: `Bearer ${authStore.getToken()}` },
+        });
+        setArticles(response.data); // Setează articolele primite
+        setLoading(false); // Opresc încărcarea
       } catch (error) {
         console.error('Eroare la obținerea articolelor conferinței:', error);
-      } finally {
         setLoading(false);
       }
     };
@@ -138,7 +139,8 @@ const ConferenceDetails = () => {
       await axiosInstance.post(
         `/conference/${id}/reviewers`,
         { reviewerId: selectedReviewer },
-        { headers: { Authorization: `Bearer ${authStore.getToken()}` }
+        {
+          headers: { Authorization: `Bearer ${authStore.getToken()}` }
         }
       );
       setMessage('Reviewer alocat cu succes!');
@@ -164,112 +166,215 @@ const ConferenceDetails = () => {
     }
   };
 
-  const isOrganizer = authStore.getUser()?.role === 'organizer' && 
-                      conference?.OrganizerId === authStore.getUser()?.id;
+  const isOrganizer = authStore.getUser()?.role === 'organizer' &&
+    conference?.OrganizerId === authStore.getUser()?.id;
+
+  const styles = {
+    container: {
+      padding: '20px',
+      maxWidth: '900px',
+      margin: '0 auto',
+      backgroundColor: '#f9f9f9',
+      borderRadius: '8px',
+      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      fontFamily: 'Arial, sans-serif',
+    },
+    title: {
+      fontSize: '28px',
+      fontWeight: 'bold',
+      marginBottom: '20px',
+      color: '#333',
+      textAlign: 'center',
+    },
+    section: {
+      marginBottom: '20px',
+      padding: '15px',
+      backgroundColor: '#fff',
+      borderRadius: '8px',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    },
+    detail: {
+      fontSize: '16px',
+      lineHeight: '1.6',
+      color: '#444',
+    },
+    subTitle: {
+      fontSize: '20px',
+      fontWeight: 'bold',
+      marginBottom: '15px',
+      color: '#555',
+    },
+    list: {
+      padding: 0,
+      listStyle: 'none',
+    },
+    listItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '10px',
+      padding: '10px',
+      border: '1px solid #ddd',
+      borderRadius: '4px',
+      backgroundColor: '#fff',
+    },
+    input: {
+      display: 'block',
+      marginBottom: '10px',
+      padding: '10px',
+      width: '100%',
+      border: '1px solid #ddd',
+      borderRadius: '4px',
+    },
+    textarea: {
+      display: 'block',
+      marginBottom: '10px',
+      padding: '10px',
+      width: '100%',
+      height: '100px',
+      border: '1px solid #ddd',
+      borderRadius: '4px',
+    },
+    button: {
+      padding: '8px 12px',
+      backgroundColor: '#007bff',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      fontSize: '14px',
+    },
+    buttonDelete: {
+      backgroundColor: 'red',
+      marginRight: '10px',
+    },
+    message: {
+      marginTop: '10px',
+      color: 'red',
+    },
+    messageSuccess: {
+      marginTop: '10px',
+      color: 'green',
+    },
+    
+  };
 
   if (!conference) {
     return <div>Se încarcă detaliile conferinței...</div>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Detalii Conferință</h2>
-      <p><strong>Nume:</strong> {conference.name}</p>
-      <p><strong>Descriere:</strong> {conference.description}</p>
-      <p><strong>Data:</strong> {new Date(conference.date).toLocaleDateString()}</p>
-      <p><strong>Locație:</strong> {conference.location}</p>
-      <p><strong>Participanți Maximi:</strong> {conference.maxParticipants}</p>
-      <p><strong>Organizator:</strong> {conference.organizerName}</p>
 
-      <h3>Revieweri alocați:</h3>
-      {allocatedReviewers.length > 0 ? (
-        <ul>
-          {allocatedReviewers.map((reviewer) => (
-            <li key={reviewer.UserId} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {reviewer.username}
-              {isOrganizer && (
-                <button
-                  onClick={() => handleRemoveReviewer(reviewer.UserId)}
-                  style={{
-                    backgroundColor: 'red',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '3px',
-                    padding: '5px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Șterge
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>Nu există revieweri alocați.</p>
-      )}
+    
 
-<h3>Articole asociate</h3>
-      {loading ? (
-        <p>Se încarcă articolele...</p>
-      ) : articles.length === 0 ? (
-        <p>Nu există articole asociate acestei conferințe.</p>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-          {articles.map((articol) => (
-            <ArticolCard key={articol.ArticleId} articol={articol} />
-          ))}
-        </div>
-      )}
+    <div style={styles.container}>
+      <h2 style={styles.title}>Detalii Conferință</h2>
+      <div style={styles.section}>
+        <p style={styles.detail}><strong>Nume:</strong> {conference.name}</p>
+        <p style={styles.detail}><strong>Descriere:</strong> {conference.description}</p>
+        <p style={styles.detail}><strong>Data:</strong> {new Date(conference.date).toLocaleDateString()}</p>
+        <p style={styles.detail}><strong>Locație:</strong> {conference.location}</p>
+        <p style={styles.detail}><strong>Participanți Maximi:</strong> {conference.maxParticipants}</p>
+        <p style={styles.detail}><strong>Organizator:</strong> {conference.organizerName}</p>
+      </div>
+      
+      <div style={styles.section}>
+  <h3 style={styles.subTitle}>Revieweri Alocați</h3>
+  
+  {isOrganizer && (
+    <div style={{ marginBottom: '20px' }}>
+      <select
+        value={selectedReviewer}
+        onChange={(e) => setSelectedReviewer(e.target.value)}
+        style={styles.input}
+      >
+        <option value="">Selectează un reviewer</option>
+        {reviewers.map((reviewer) => (
+          <option key={reviewer.UserId} value={reviewer.UserId}>
+            {reviewer.username}
+          </option>
+        ))}
+      </select>
+      <button
+        onClick={handleAllocateReviewer}
+        style={styles.button}
+      >
+        Alocă Reviewer
+      </button>
+    </div>
+  )}
+
+  {allocatedReviewers.length > 0 ? (
+    <ul style={styles.list}>
+      {allocatedReviewers.map((reviewer) => (
+        <li key={reviewer.UserId} style={styles.listItem}>
+          <span>{reviewer.username}</span> {/* Nume reviewer în stânga */}
+          {isOrganizer && (
+            <button
+              onClick={() => handleRemoveReviewer(reviewer.UserId)}
+              style={{ ...styles.button, ...styles.buttonDelete }}
+            >
+              Șterge
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p>Nu există revieweri alocați.</p>
+  )}
+</div>
+
+
+      <div style={styles.section}>
+        <h3 style={styles.subTitle}>Articole Asociate</h3>
+        {loading ? (
+          <p>Se încarcă articolele...</p>
+        ) : articles.length === 0 ? (
+          <p>Nu există articole asociate acestei conferințe.</p>
+        ) : (
+          <div style={styles.grid}>
+            {articles.map((articol) => (
+              <ArticolCard key={articol.ArticleId} articol={articol} />
+            ))}
+          </div>
+        )}
+      </div>
 
       {authStore.getUser()?.role === 'author' && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>Propune un articol</h3>
+        <div style={styles.section}>
+          <h3 style={styles.subTitle}>Propune un Articol</h3>
           <input
             type="text"
             placeholder="Titlu articol"
             value={articleTitle}
             onChange={(e) => setArticleTitle(e.target.value)}
-            style={{
-              display: 'block',
-              marginBottom: '10px',
-              padding: '5px',
-              width: '100%',
-            }}
+            style={styles.input}
           />
           <textarea
             placeholder="Conținut articol"
             value={articleContent}
             onChange={(e) => setArticleContent(e.target.value)}
-            style={{
-              display: 'block',
-              marginBottom: '10px',
-              padding: '5px',
-              width: '100%',
-              height: '100px',
-            }}
+            style={styles.textarea}
           />
           <button
             onClick={handleProposeArticle}
-            style={{
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '3px',
-              padding: '5px 10px',
-              cursor: 'pointer',
-            }}
+            style={styles.button}
           >
             Propune Articol
           </button>
           {message && (
-            <p style={{ marginTop: '10px', color: message.includes('succes') ? 'green' : 'red' }}>
+            <p
+              style={message.includes('succes') ? styles.messageSuccess : styles.message}
+            >
               {message}
             </p>
           )}
         </div>
       )}
     </div>
+
+    
   );
 };
 
