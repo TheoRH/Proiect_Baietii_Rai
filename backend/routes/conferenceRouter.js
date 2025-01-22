@@ -1,35 +1,40 @@
 import express from 'express';
 import authenticateToken from '../middleware/authenticateToken.js';
-import { createConference, getConferences, getConferenceById, deleteConference, addReviewerToConference, removeReviewerFromConference,addAuthorToConference} from "../dataAccess/conferenceDA.js";
+import { createConference, getConferences, getConferenceById, deleteConference, addReviewerToConference, removeReviewerFromConference,addAuthorToConference,checkAuthorRegistration,proposeArticle } from "../dataAccess/conferenceDA.js";
 
 const conferenceRouter = express.Router();
 conferenceRouter.use(authenticateToken); // Protejeaza toate rutele
 
 
 //Rute pentru articole
-conferenceRouter.route('/conference/:id/propose-article')
+conferenceRouter.route('/conference/:id/articles')
 .post(async (req, res) => {
   try {
-    const { id: conferenceId } = req.params;
-    const { id: userId } = req.user;
-    const { title, content } = req.body;
+    const { id: conferenceId } = req.params; // ID-ul conferinței din URL
+    const { title, content, authorName } = req.body; // Datele din corpul cererii
+    const { id: userId } = req.user; // ID-ul utilizatorului logat
 
-    if (!title || !content) {
-      return res.status(400).json({ message: 'Titlul și conținutul articolului sunt necesare.' });
+    if (!title || !content || !authorName) {
+      return res.status(400).json({ message: 'Toate câmpurile sunt obligatorii.' });
     }
 
-    // Verificare dacă autorul este înscris
     const isRegistered = await checkAuthorRegistration(conferenceId, userId);
     if (!isRegistered) {
-      return res.status(403).json({ message: 'Trebuie să fii înscris la conferință pentru a propune un articol.' });
+      return res.status(403).json({ message: 'Nu sunteți înregistrat la această conferință.' });
     }
 
-    // Adaugă articolul
-    await proposeArticle(conferenceId, userId, title, content);
-    res.status(201).json({ message: 'Articol propus cu succes!' });
+    const article = await proposeArticle({
+      title,
+      content,
+      conferenceId: 10, // Conferința curentă
+      userId, // Autorul
+      authorName,
+    });
+
+    res.status(201).json(article);
   } catch (error) {
     console.error('Eroare la propunerea articolului:', error);
-    res.status(500).json({ message: 'A apărut o eroare la propunerea articolului.' });
+    res.status(500).json({ message: 'Nu s-a putut crea articolul.' });
   }
 });
 

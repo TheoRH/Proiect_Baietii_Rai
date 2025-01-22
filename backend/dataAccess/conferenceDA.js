@@ -2,6 +2,43 @@ import Conference from '../entities/Conferinte.js';
 import User from '../entities/User.js';
 import ConferenceReviewers from '../entities/ConferenceReviewers.js';
 import ConferenceAuthors from '../entities/ConferenceAuthors.js';
+import Article from '../entities/Articole.js';
+
+//functie de adaugat articole
+export async function proposeArticle({ title, content, conferenceId, authorName }) {
+  try {
+    const article = await Article.create({
+      title,
+      content,
+      authorName,
+      status:'pending',
+      submittedDate: new Date(),
+      ConferenceId: conferenceId,
+    
+    });
+    return article;
+  } catch (error) {
+    console.error('Eroare la crearea articolului:', error);
+    throw new Error('Nu s-a putut crea articolul.');
+  }
+}
+
+//functie de a verifica daca autorul este inregistrat
+export async function checkAuthorRegistration(conferenceId, userId) {
+  try {
+    const registration = await ConferenceAuthors.findOne({
+      where: {
+        ConferenceId: conferenceId,
+        UserId: userId,
+      },
+    });
+    return !!registration; // Returnează true dacă autorul este deja înregistrat
+  } catch (error) {
+    console.error('Eroare la verificarea înregistrării autorului:', error);
+    throw new Error('Nu s-a putut verifica înregistrarea autorului.');
+  }
+}
+
 
 //functie de a alatura autor
 export async function addAuthorToConference(conferenceId, userId) {

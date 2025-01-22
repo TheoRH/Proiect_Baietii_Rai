@@ -99,6 +99,7 @@ class ConferenceStore {
         headers: { Authorization: `Bearer ${authStore.getToken()}` },
       });
       console.log(response.data.message); // Mesaj de succes
+      window.alert('Te-ai alăturat cu succes conferinței!');
       return response.data.message;
     } catch (error) {
       console.error('Eroare la alăturarea la conferință:', error.response?.data || error.message);

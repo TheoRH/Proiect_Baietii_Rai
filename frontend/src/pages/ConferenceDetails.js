@@ -10,6 +10,8 @@ const ConferenceDetails = () => {
   const [allocatedReviewers, setAllocatedReviewers] = useState([]);
   const [selectedReviewer, setSelectedReviewer] = useState('');
   const [message, setMessage] = useState('');
+  const [articleTitle, setArticleTitle] = useState('');
+  const [articleContent, setArticleContent] = useState('');
 
   // Fetch detalii conferință, lista de revieweri și reviewerii alocați
   useEffect(() => {
@@ -34,22 +36,51 @@ const ConferenceDetails = () => {
       }
     };
 
-    const fetchAllocatedReviewers = async () => {
-      try {
-        const response = await axiosInstance.get(`/conference/${id}/reviewers`, {
-          headers: { Authorization: `Bearer ${authStore.getToken()}` },
-        });
-        setAllocatedReviewers(response.data);
-      } catch (error) {
-        console.error('Eroare la obținerea reviewerilor alocați:', error);
-        setMessage('Nu s-au putut încărca reviewerii alocați.');
-      }
-    };
-
     fetchConferenceDetails();
     fetchReviewers();
-    fetchAllocatedReviewers();
+    updateAllocatedReviewers();
   }, [id]);
+
+  //Functie pentru trimiterea unui articol
+  const handleProposeArticle = async () => {
+    if (!articleTitle || !articleContent) {
+      setMessage('Completează toate câmpurile pentru a propune un articol.');
+      return;
+    }
+  
+    try {
+      const authorName = authStore.getUser()?.username; // Obține numele utilizatorului autentificat
+      if (!authorName) {
+        setMessage('Nu am putut determina numele autorului. Verifică autentificarea.');
+        return;
+      }
+  
+      await axiosInstance.post(
+        `/conference/${id}/articles`,
+        { title: articleTitle, content: articleContent, authorName }, // Trimite și authorName
+        { headers: { Authorization: `Bearer ${authStore.getToken()}` } }
+      );
+      setMessage('Articol propus cu succes!');
+      setArticleTitle('');
+      setArticleContent('');
+    } catch (error) {
+      console.error('Eroare la propunerea articolului:', error.response?.data || error.message);
+      setMessage('A apărut o eroare la propunerea articolului.');
+    }
+  };
+
+  // Funcție centralizată de actualizare a reviewerilor alocați
+  const updateAllocatedReviewers = async () => {
+    try {
+      const response = await axiosInstance.get(`/conference/${id}/reviewers`, {
+        headers: { Authorization: `Bearer ${authStore.getToken()}` },
+      });
+      setAllocatedReviewers(response.data);
+    } catch (error) {
+      console.error('Eroare la actualizarea reviewerilor alocați:', error);
+      setMessage('Nu s-au putut încărca reviewerii alocați.');
+    }
+  };
 
   // Funcție de alocare a unui reviewer
   const handleAllocateReviewer = async () => {
@@ -66,11 +97,7 @@ const ConferenceDetails = () => {
       );
       setMessage('Reviewer alocat cu succes!');
       setSelectedReviewer('');
-      // Reîncarcă lista reviewerilor alocați
-      const response = await axiosInstance.get(`/conference/${id}/reviewers`, {
-        headers: { Authorization: `Bearer ${authStore.getToken()}` },
-      });
-      setAllocatedReviewers(response.data);
+      updateAllocatedReviewers(); // Actualizează automat lista
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'A apărut o eroare la alocarea reviewerului.';
       setMessage(errorMessage);
@@ -84,10 +111,7 @@ const ConferenceDetails = () => {
         headers: { Authorization: `Bearer ${authStore.getToken()}` },
       });
       setMessage('Reviewer eliminat cu succes!');
-      const response = await axiosInstance.get(`/conference/${id}/reviewers`, {
-        headers: { Authorization: `Bearer ${authStore.getToken()}` },
-      });
-      setAllocatedReviewers(response.data);
+      updateAllocatedReviewers(); // Actualizează automat lista
     } catch (error) {
       console.error('Eroare la ștergerea reviewerului:', error);
       setMessage('Nu s-a putut șterge reviewerul.');
@@ -109,9 +133,9 @@ const ConferenceDetails = () => {
       <p><strong>Organizator:</strong> {conference.organizerName}</p>
   
       <h3>Revieweri alocați:</h3>
-      {conference.Reviewers?.length > 0 ? (
+      {allocatedReviewers.length > 0 ? (
         <ul>
-         {allocatedReviewers.map((reviewer) => (
+          {allocatedReviewers.map((reviewer) => (
             <li key={reviewer.UserId} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {reviewer.username}
               <button
@@ -157,9 +181,59 @@ const ConferenceDetails = () => {
           )}
         </div>
       )}
+
+      {authStore.getUser()?.role === 'author' && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>Propune un articol</h3>
+          <input
+            type="text"
+            placeholder="Titlu articol"
+            value={articleTitle}
+            onChange={(e) => setArticleTitle(e.target.value)}
+            style={{
+              display: 'block',
+              marginBottom: '10px',
+              padding: '5px',
+              width: '100%',
+            }}
+          />
+          <textarea
+            placeholder="Conținut articol"
+            value={articleContent}
+            onChange={(e) => setArticleContent(e.target.value)}
+            style={{
+              display: 'block',
+              marginBottom: '10px',
+              padding: '5px',
+              width: '100%',
+              height: '100px',
+            }}
+          />
+          <button
+            onClick={handleProposeArticle}
+            style={{
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              padding: '5px 10px',
+              cursor: 'pointer',
+            }}
+          >
+            Propune Articol
+          </button>
+          {message && (
+            <p style={{ marginTop: '10px', color: message.includes('succes') ? 'green' : 'red' }}>
+              {message}
+            </p>
+          )}
+        </div>
+      )}
+
+
     </div>
+    
   );
-  
 };
 
 export default ConferenceDetails;

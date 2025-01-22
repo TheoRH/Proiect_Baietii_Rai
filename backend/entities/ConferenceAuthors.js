@@ -11,22 +11,15 @@ const ConferenceAuthors = db.define('ConferenceAuthors', {
     ConferenceId: {
       type: Sequelize.INTEGER,
       allowNull: false,
-      references: {
-        model: 'conference', // Numele tabelului
-        key: 'id',
-      },
-      onDelete: 'CASCADE', // Opțional, pentru gestionarea ștergerii
+
     },
     UserId: {
       type: Sequelize.INTEGER,
       allowNull: false,
-      references: {
-        model: 'user', // Numele tabelului
-        key: 'id',
-      },
-      onDelete: 'CASCADE', // Opțional
+   
     },
   });
+  
   
   export default ConferenceAuthors;
   
