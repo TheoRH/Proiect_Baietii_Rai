@@ -26,7 +26,7 @@ conferenceRouter.route('/conference/:id/articles')
     const article = await proposeArticle({
       title,
       content,
-      conferenceId: 10, // Conferința curentă
+      conferenceId: conferenceId, // Conferința curentă
       userId, // Autorul
       authorName,
     });

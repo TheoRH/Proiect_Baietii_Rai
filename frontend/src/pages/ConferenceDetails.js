@@ -49,6 +49,8 @@ const ConferenceDetails = () => {
     }
   
     try {
+      console.log('Titlu articol:', articleTitle);
+      console.log('Conținut articol:', articleContent);
       const authorName = authStore.getUser()?.username; // Obține numele utilizatorului autentificat
       if (!authorName) {
         setMessage('Nu am putut determina numele autorului. Verifică autentificarea.');

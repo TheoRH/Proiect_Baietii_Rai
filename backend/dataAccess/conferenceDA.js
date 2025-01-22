@@ -16,6 +16,13 @@ export async function proposeArticle({ title, content, conferenceId, authorName 
       ConferenceId: conferenceId,
     
     });
+    const conference = await Conference.findByPk(conferenceId);
+    if (conference) {
+      await conference.addArticle(article); // Adaugă articolul la conferință
+    } else {
+      throw new Error('Conferința specificată nu a fost găsită.');
+    }
+
     return article;
   } catch (error) {
     console.error('Eroare la crearea articolului:', error);

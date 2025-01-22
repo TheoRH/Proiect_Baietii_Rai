@@ -1,6 +1,7 @@
 import Conference from './Conferinte.js';
 import User from './User.js';
 import ConferenceAuthors from './ConferenceAuthors.js';
+import Article from './Articole.js';
 
 // Relația N-N între Conference și User prin ConferenceReviewers
 Conference.belongsToMany(User, {
@@ -28,5 +29,18 @@ User.belongsToMany(Conference, {
   foreignKey: 'UserId',
 });
 
+// Relația N-N între Conference și Article prin tabela intermediară
+Conference.belongsToMany(Article, {
+  through: 'ConferenceArticles',
+  as: 'Articles',
+  foreignKey: 'ConferenceId',
+});
+
+Article.belongsToMany(Conference, {
+  through: 'ConferenceArticles',
+  as: 'Conferences',
+  foreignKey: 'ArticleId',
+});
+
 // Exportă modelele
-export { Conference, User, ConferenceAuthors };
+export { Conference, User, ConferenceAuthors, Article };

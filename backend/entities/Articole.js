@@ -28,7 +28,7 @@ const Article = db.define("Article", {
     type: Sequelize.DATE,
     defaultValue: Sequelize.NOW,
   },
-  conferenceId: {
+  ConferenceId: {
     type: Sequelize.INTEGER,
     allowNull: false,
     references: {
