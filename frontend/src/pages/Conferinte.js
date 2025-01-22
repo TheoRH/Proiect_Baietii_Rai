@@ -47,6 +47,8 @@ const Conferinte = observer(() => {
   };
   
 
+  
+
 
   if (!authStore.isLoggedIn()) {
     return <div style={{ color: 'red', padding: '20px' }}>Trebuie să fii autentificat pentru a vedea conferințele.</div>;

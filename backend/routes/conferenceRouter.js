@@ -1,9 +1,61 @@
 import express from 'express';
 import authenticateToken from '../middleware/authenticateToken.js';
-import { createConference, getConferences, getConferenceById, deleteConference, addReviewerToConference, removeReviewerFromConference} from "../dataAccess/conferenceDA.js";
+import { createConference, getConferences, getConferenceById, deleteConference, addReviewerToConference, removeReviewerFromConference,addAuthorToConference} from "../dataAccess/conferenceDA.js";
 
 const conferenceRouter = express.Router();
 conferenceRouter.use(authenticateToken); // Protejeaza toate rutele
+
+
+//Rute pentru articole
+conferenceRouter.route('/conference/:id/propose-article')
+.post(async (req, res) => {
+  try {
+    const { id: conferenceId } = req.params;
+    const { id: userId } = req.user;
+    const { title, content } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ message: 'Titlul și conținutul articolului sunt necesare.' });
+    }
+
+    // Verificare dacă autorul este înscris
+    const isRegistered = await checkAuthorRegistration(conferenceId, userId);
+    if (!isRegistered) {
+      return res.status(403).json({ message: 'Trebuie să fii înscris la conferință pentru a propune un articol.' });
+    }
+
+    // Adaugă articolul
+    await proposeArticle(conferenceId, userId, title, content);
+    res.status(201).json({ message: 'Articol propus cu succes!' });
+  } catch (error) {
+    console.error('Eroare la propunerea articolului:', error);
+    res.status(500).json({ message: 'A apărut o eroare la propunerea articolului.' });
+  }
+});
+
+
+//Rute pentru autori
+conferenceRouter.route('/conference/:id/authors')
+.post(async (req, res) => {
+  try {
+    const { id: conferenceId } = req.params;
+    const { id: userId } = req.user;
+
+    // Verificare existența conferinței
+    const conference = await getConferenceById(conferenceId);
+    if (!conference) {
+      return res.status(404).json({ message: 'Conferința nu a fost găsită.' });
+    }
+
+    // Înregistrarea autorului
+    await addAuthorToConference(conferenceId, userId);
+    res.status(200).json({ message: 'Te-ai alăturat cu succes conferinței!' });
+  } catch (error) {
+    console.error('Eroare la înregistrarea autorului:', error);
+    res.status(500).json({ message: 'A apărut o eroare la înregistrarea autorului.' });
+  }
+});
+
 
 // Rute pentru conferinte
 conferenceRouter.route('/conference/:id/reviewers')

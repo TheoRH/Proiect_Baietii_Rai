@@ -1,6 +1,22 @@
 import Conference from '../entities/Conferinte.js';
 import User from '../entities/User.js';
 import ConferenceReviewers from '../entities/ConferenceReviewers.js';
+import ConferenceAuthors from '../entities/ConferenceAuthors.js';
+
+//functie de a alatura autor
+export async function addAuthorToConference(conferenceId, userId) {
+  try {
+    await ConferenceAuthors.create({
+      ConferenceId: conferenceId,
+      UserId: userId,
+    });
+    return { message: 'Autorul a fost înregistrat cu succes la conferință.' };
+  } catch (error) {
+    console.error('Eroare la adăugarea autorului în conferință:', error);
+    throw error;
+  }
+}
+
 
 export async function addReviewerToConference(conferenceId, reviewerId) {
   try {

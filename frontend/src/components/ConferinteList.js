@@ -63,7 +63,7 @@ function ConferinteList({ conferinte }) {
           {/* Butonul de alaturare */}
           {authStore.getUser()?.role === 'author'&&(
             <button
-              onClick={() => conferenceStore.deleteConference(conf.ConferenceId)}
+            onClick={() => conferenceStore.joinConference(conf.ConferenceId)}
               style={{
                 backgroundColor: '#4A9419',
                 color: 'white',

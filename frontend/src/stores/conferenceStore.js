@@ -88,6 +88,28 @@ class ConferenceStore {
     }
   }
 
+  async joinConference(conferenceId) {
+    if (!authStore.getToken()) {
+      console.warn('Token lipsă, nu se poate alătura la conferință.');
+      return;
+    }
+  
+    try {
+      const response = await axiosInstance.post(`/conference/${conferenceId}/authors`, {}, {
+        headers: { Authorization: `Bearer ${authStore.getToken()}` },
+      });
+      console.log(response.data.message); // Mesaj de succes
+      return response.data.message;
+    } catch (error) {
+      console.error('Eroare la alăturarea la conferință:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Eroare la alăturarea la conferință.');
+    }
+  }
+  
+  
+
+
+
   resetConferences() {
     this.conferences = [];
     this.error = null;

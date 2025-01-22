@@ -60,6 +60,18 @@ const DB_Init = async () => {
       foreignKey: "UserId" 
     });
 
+    Conference.belongsToMany(Article, {
+      through: "ConferenceArticles",
+      as: "ArticlesInConference",
+      foreignKey: "ConferenceId"
+    });
+
+    Article.belongsToMany(Conference, {
+      through: "ConferenceArticles",
+      as: "ConferencesForArticle",
+      foreignKey: "ArticleId"
+    });
+
     // Sincronizare bazei de date
     await db.sync({ alter: true }); // Sincronizează baza de date
     console.log("Tabelele au fost sincronizate cu succes!");
