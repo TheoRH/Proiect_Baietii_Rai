@@ -1,4 +1,4 @@
-# Proiect Management Articole Conferințe
+# Aplicație web pentru organizarea de conferințe
 
 Acest proiect este o aplicație pentru gestionarea articolelor trimise în cadrul conferințelor științifice. Aplicația permite utilizatorilor autentificați să creeze, revizuiască și gestioneze articolele, cu funcționalități specifice pentru autori și recenzori.
 
