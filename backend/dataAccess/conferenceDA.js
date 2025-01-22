@@ -11,11 +11,11 @@ export async function proposeArticle({ title, content, conferenceId, authorName 
       title,
       content,
       authorName,
-      status:'pending',
+      status: 'pending',
       submittedDate: new Date(),
-      ConferenceId: conferenceId,
-    
+      ConferenceId: conferenceId, // Asociază articolul cu conferința
     });
+
     const conference = await Conference.findByPk(conferenceId);
     if (conference) {
       await conference.addArticle(article); // Adaugă articolul la conferință

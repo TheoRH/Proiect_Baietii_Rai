@@ -29,18 +29,10 @@ User.belongsToMany(Conference, {
   foreignKey: 'UserId',
 });
 
-// Relația N-N între Conference și Article prin tabela intermediară
-Conference.belongsToMany(Article, {
-  through: 'ConferenceArticles',
-  as: 'Articles',
-  foreignKey: 'ConferenceId',
-});
 
-Article.belongsToMany(Conference, {
-  through: 'ConferenceArticles',
-  as: 'Conferences',
-  foreignKey: 'ArticleId',
-});
+// Adăugare relație hasMany pentru utilizarea metodei addArticle
+Conference.hasMany(Article, { foreignKey: 'ConferenceId' });
+Article.belongsTo(Conference, { foreignKey: 'ConferenceId' });
 
 // Exportă modelele
 export { Conference, User, ConferenceAuthors, Article };
