@@ -35,7 +35,7 @@ const Home = () => {
             }}
             onClick={() => {
               // Navighează către pagina articolelor
-              window.location.href = '/articles';
+              window.location.href = '/articole';
             }}
           >
             Vezi articolele mele
@@ -59,7 +59,7 @@ const Home = () => {
             }}
             onClick={() => {
               // Navighează către pagina articolelor de revizuit
-              window.location.href = '/review';
+              window.location.href = '/articole';
             }}
           >
             Revizuiește articole
@@ -83,7 +83,7 @@ const Home = () => {
             }}
             onClick={() => {
               // Navighează către pagina de administrare
-              window.location.href = '/admin';
+              window.location.href = '/conferinte';
             }}
           >
             Administrează conferințe

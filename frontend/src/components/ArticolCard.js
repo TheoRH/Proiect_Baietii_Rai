@@ -3,7 +3,7 @@ import articleStore from '../stores/articleStore';
 import authStore from '../stores/AuthStore';
 import axiosInstance from '../axiosConfig';
 
-function ArticolCard({ articol, onRemove }) {
+function ArticolCard({ articol, onRemove,showActions = true }) {
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [isFading, setIsFading] = useState(false);
@@ -132,8 +132,8 @@ function ArticolCard({ articol, onRemove }) {
         <h4 style={{ marginBottom: '10px', color: '#2c3e50' }}>Conținutul articolului:</h4>
         <p style={{ whiteSpace: 'pre-wrap', color: '#2c3e50', lineHeight: '1.6' }}>{articol.content}</p>
       </div>
-
-      {articol.feedback && (
+        
+      {showActions && articol.feedback && (
         <div
           style={{
             backgroundColor: '#fdfefe',
@@ -166,7 +166,7 @@ function ArticolCard({ articol, onRemove }) {
         </button>
       )}
 
-      {isReviewer && (
+      {showActions && isReviewer && (
         <>
           <textarea
             placeholder="Introdu feedback"

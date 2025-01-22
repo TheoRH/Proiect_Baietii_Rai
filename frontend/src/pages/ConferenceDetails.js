@@ -256,7 +256,7 @@ const ConferenceDetails = () => {
       marginTop: '10px',
       color: 'green',
     },
-    
+
   };
 
   if (!conference) {
@@ -265,7 +265,7 @@ const ConferenceDetails = () => {
 
   return (
 
-    
+
 
     <div style={styles.container}>
       <h2 style={styles.title}>Detalii Conferință</h2>
@@ -277,53 +277,53 @@ const ConferenceDetails = () => {
         <p style={styles.detail}><strong>Participanți Maximi:</strong> {conference.maxParticipants}</p>
         <p style={styles.detail}><strong>Organizator:</strong> {conference.organizerName}</p>
       </div>
-      
-      <div style={styles.section}>
-  <h3 style={styles.subTitle}>Revieweri Alocați</h3>
-  
-  {isOrganizer && (
-    <div style={{ marginBottom: '20px' }}>
-      <select
-        value={selectedReviewer}
-        onChange={(e) => setSelectedReviewer(e.target.value)}
-        style={styles.input}
-      >
-        <option value="">Selectează un reviewer</option>
-        {reviewers.map((reviewer) => (
-          <option key={reviewer.UserId} value={reviewer.UserId}>
-            {reviewer.username}
-          </option>
-        ))}
-      </select>
-      <button
-        onClick={handleAllocateReviewer}
-        style={styles.button}
-      >
-        Alocă Reviewer
-      </button>
-    </div>
-  )}
 
-  {allocatedReviewers.length > 0 ? (
-    <ul style={styles.list}>
-      {allocatedReviewers.map((reviewer) => (
-        <li key={reviewer.UserId} style={styles.listItem}>
-          <span>{reviewer.username}</span> {/* Nume reviewer în stânga */}
-          {isOrganizer && (
-            <button
-              onClick={() => handleRemoveReviewer(reviewer.UserId)}
-              style={{ ...styles.button, ...styles.buttonDelete }}
+      <div style={styles.section}>
+        <h3 style={styles.subTitle}>Revieweri Alocați</h3>
+
+        {isOrganizer && (
+          <div style={{ marginBottom: '20px' }}>
+            <select
+              value={selectedReviewer}
+              onChange={(e) => setSelectedReviewer(e.target.value)}
+              style={styles.input}
             >
-              Șterge
+              <option value="">Selectează un reviewer</option>
+              {reviewers.map((reviewer) => (
+                <option key={reviewer.UserId} value={reviewer.UserId}>
+                  {reviewer.username}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleAllocateReviewer}
+              style={styles.button}
+            >
+              Alocă Reviewer
             </button>
-          )}
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p>Nu există revieweri alocați.</p>
-  )}
-</div>
+          </div>
+        )}
+
+        {allocatedReviewers.length > 0 ? (
+          <ul style={styles.list}>
+            {allocatedReviewers.map((reviewer) => (
+              <li key={reviewer.UserId} style={styles.listItem}>
+                <span>{reviewer.username}</span> {/* Nume reviewer în stânga */}
+                {isOrganizer && (
+                  <button
+                    onClick={() => handleRemoveReviewer(reviewer.UserId)}
+                    style={{ ...styles.button, ...styles.buttonDelete }}
+                  >
+                    Șterge
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Nu există revieweri alocați.</p>
+        )}
+      </div>
 
 
       <div style={styles.section}>
@@ -335,7 +335,7 @@ const ConferenceDetails = () => {
         ) : (
           <div style={styles.grid}>
             {articles.map((articol) => (
-              <ArticolCard key={articol.ArticleId} articol={articol} />
+              <ArticolCard key={articol.ArticleId} articol={articol} showActions={false} />
             ))}
           </div>
         )}
@@ -374,7 +374,7 @@ const ConferenceDetails = () => {
       )}
     </div>
 
-    
+
   );
 };
 
