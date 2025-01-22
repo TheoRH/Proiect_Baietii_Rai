@@ -13,10 +13,20 @@ function ArticolCard({ articol, onRemove }) {
   const isReviewer = authStore.getUser()?.role === 'reviewer';
 
   // Funcția pentru a obține numele conferinței
-  
+  const fetchConferenceName = async (articleId) => {
+    try {
+      const response = await axiosInstance.get(`/article/${articleId}/conference-name`);
+      setConferenceName(response.data); // Setează numele conferinței
+    } catch (error) {
+      console.error('Eroare la obținerea numelui conferinței:', error);
+      setConferenceName('Nespecificată'); // Fallback în caz de eroare
+    }
+  };
 
-  // Apelăm funcția la montarea componentei
-  
+  // Apelă funcția pentru a obține numele conferinței
+  useEffect(() => {
+    fetchConferenceName(articol.ArticleId);
+  }, [articol.ArticleId]);
   const getStatusStyle = () => {
     switch (articol.status.toLowerCase()) {
       case 'accepted':
