@@ -1,6 +1,8 @@
 import express from 'express';
 import authenticateToken from '../middleware/authenticateToken.js';
-import { createArticle, getArticles, getArticleById, deleteArticle, updateArticleStatus, getArticlesByReviewer, getArticlesByAuthor } from "../dataAccess/articleDA.js";
+import { createArticle, getArticles, getArticleById, deleteArticle, updateArticleStatus, getArticlesByReviewer, getArticlesByAuthor, getArticlesForUser,sendFeedback,updateArticleVersion, getArticleWithConferenceName, getArticlesByConference   } from "../dataAccess/articleDA.js";
+
+
 
 const articleRouter = express.Router();
 articleRouter.use(authenticateToken); // Protejeaza toate rutele
@@ -26,26 +28,19 @@ articleRouter.route('/article')
     }
   });
 
-  articleRouter.route('/article/mine')
-  .get(async (req, res) => {
+  articleRouter.route('/article/mine').get(async (req, res) => {
     try {
-      const { role, id } = req.user;
-      let articles;
-
-      if (role === 'author') {
-        articles = await getArticlesByAuthor(id);
-      } else if (role === 'reviewer') {
-        articles = await getArticlesByReviewer(id);
-      } else {
-        return res.status(403).json({ message: 'Nu aveți permisiunea de a accesa aceste articole.' });
-      }
-
+      const userId = req.user.id; // ID-ul utilizatorului din token
+      const role = req.user.role; // Rolul utilizatorului din token
+  
+      const articles = await getArticlesForUser(userId, role);
       res.status(200).json(articles);
     } catch (error) {
-      console.error(error);
+      console.error('Eroare la obținerea articolelor utilizatorului:', error);
       res.status(500).json({ message: 'A apărut o eroare la obținerea articolelor.' });
     }
   });
+  
 
 
 articleRouter.route('/article/:id')
@@ -88,13 +83,16 @@ articleRouter.route('/article/:id/feedback')
       const { id } = req.params;
       const { id: reviewerId } = req.user;
 
+      console.log('Feedback primit:', feedback, 'Pentru articol:', id, 'De la reviewer:', reviewerId);
+
       await sendFeedback(id, reviewerId, feedback);
       res.status(200).json({ message: 'Feedback trimis cu succes.' });
     } catch (error) {
-      console.error(error);
+      console.error('Eroare la trimiterea feedback-ului:', error);
       res.status(500).json({ message: 'A apărut o eroare la trimiterea feedback-ului.' });
     }
   });
+
 
 articleRouter.route('/article/:id/update')
   .patch(async (req, res) => {
@@ -110,6 +108,28 @@ articleRouter.route('/article/:id/update')
       res.status(500).json({ message: 'A apărut o eroare la actualizarea articolului.' });
     }
   });
+
+  articleRouter.route('/conference/:id/articles').get(async (req, res) => {
+    try {
+      const { id } = req.params; // ID-ul conferinței
+      const articles = await getArticlesByConference(id);
+      res.status(200).json(articles);
+    } catch (error) {
+      console.error('Eroare la obținerea articolelor pentru conferință:', error);
+      res.status(500).json({ message: 'A apărut o eroare la obținerea articolelor.' });
+    }
+  });
+
+  articleRouter.route('/conference/:id/with-conference').get(async (req, res) => {
+    try {
+      const article = await getArticleWithConferenceName(req.params.id);
+      res.status(200).json(article);
+    } catch (error) {
+      res.status(500).json({ message: 'Eroare la obținerea articolului.' });
+    }
+  });
+
+  
 
 
 export default articleRouter;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import articleStore from '../stores/articleStore';
 import authStore from '../stores/AuthStore';
 
@@ -6,13 +6,30 @@ function ArticolCard({ articol, onRemove }) {
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [isFading, setIsFading] = useState(false);
+  const [updatedArticol, setUpdatedArticol] = useState(articol);
+  const [conferenceName, setConferenceName] = useState(''); // Pentru a stoca numele conferinței
 
   const isAuthor = authStore.getUser()?.role === 'author';
   const isReviewer = authStore.getUser()?.role === 'reviewer';
 
-  // Funcție pentru determinarea stilurilor în funcție de status
+  useEffect(() => {
+    // Încarcă numele conferinței asociate articolului
+    const fetchConferenceName = async () => {
+      try {
+        const response = await fetch(`/api/articles/${articol.ArticleId}/with-conference`);
+        const data = await response.json();
+        setConferenceName(data.conferenceName || 'Nespecificată');
+      } catch (err) {
+        console.error('Eroare la încărcarea numelui conferinței:', err);
+        setConferenceName('Nespecificată');
+      }
+    };
+
+    fetchConferenceName();
+  }, [articol.ArticleId]);
+
   const getStatusStyle = () => {
-    switch (articol.status.toLowerCase()) {
+    switch (updatedArticol.status.toLowerCase()) {
       case 'accepted':
         return { bg: '#d4edda', text: '#155724' };
       case 'rejected':
@@ -33,9 +50,13 @@ function ArticolCard({ articol, onRemove }) {
     }
 
     try {
-      await articleStore.sendFeedback(articol.ArticleId, feedback);
+      await articleStore.sendFeedback(updatedArticol.ArticleId, feedback);
+      setUpdatedArticol((prev) => ({
+        ...prev,
+        feedback,
+      }));
       setFeedback('');
-      setError('');
+      alert('Feedback trimis cu succes!');
     } catch (err) {
       setError('A apărut o eroare la trimiterea feedback-ului.');
     }
@@ -45,7 +66,11 @@ function ArticolCard({ articol, onRemove }) {
     try {
       const newContent = prompt('Introduceți conținutul noii versiuni:');
       if (newContent) {
-        await articleStore.submitNewVersion(articol.ArticleId, newContent);
+        await articleStore.submitNewVersion(updatedArticol.ArticleId, newContent);
+        setUpdatedArticol((prev) => ({
+          ...prev,
+          content: newContent,
+        }));
         setError('');
       }
     } catch (err) {
@@ -53,51 +78,86 @@ function ArticolCard({ articol, onRemove }) {
     }
   };
 
-  const handleStatusChange = async (status) => {
-    try {
-      await articleStore.updateArticleStatus(articol.ArticleId, status);
-      setIsFading(true);
-      setTimeout(() => {
-        if (onRemove) {
-          onRemove(articol.ArticleId); // Elimină articolul din listă
-        }
-      }, 300); // Durata efectului CSS
-    } catch (err) {
-      setError('A apărut o eroare la actualizarea statusului.');
-    }
-  };
-  
-
   return (
     <div
       style={{
         border: '1px solid #ccc',
-        padding: '15px',
-        borderRadius: '8px',
+        padding: '20px',
+        borderRadius: '15px',
         backgroundColor: statusStyle.bg,
         transition: 'opacity 0.3s ease',
-        opacity: isFading ? 0 : 1, // Efect de dispariție
+        opacity: isFading ? 0 : 1,
+        boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
+        marginBottom: '20px',
+        fontFamily: 'Arial, sans-serif',
       }}
     >
-      <h3>{articol.title}</h3>
-      <p>Autor: {articol.authorName}</p>
+      <h3 style={{ color: '#2c3e50', marginBottom: '10px', fontSize: '1.5em' }}>{updatedArticol.title}</h3>
+      <p style={{ fontStyle: 'italic', marginBottom: '10px', color: '#7f8c8d' }}>
+        Autor: {updatedArticol.authorName}
+      </p>
       <p
         style={{
           color: statusStyle.text,
           fontWeight: 'bold',
-          padding: '5px',
+          padding: '5px 15px',
           borderRadius: '4px',
           display: 'inline-block',
+          backgroundColor: '#f0f3f4',
+          fontSize: '1em',
         }}
       >
-        Status: {articol.status}
+        Status: {updatedArticol.status}
       </p>
-      <p>Data trimiterii: {new Date(articol.submittedDate).toLocaleDateString()}</p>
+      <p style={{ color: '#34495e', marginTop: '10px', fontSize: '0.9em' }}>
+        Data trimiterii: {new Date(updatedArticol.submittedDate).toLocaleDateString()}
+      </p>
 
-      {articol.feedback && <p>Feedback: {articol.feedback}</p>}
+      <p style={{ color: '#7f8c8d', marginTop: '10px', fontSize: '0.9em' }}>
+        Conferință: <strong>{conferenceName}</strong>
+      </p>
 
-      {isAuthor && articol.feedback && (
-        <button onClick={handleSubmitNewVersion} style={{ marginTop: '10px' }}>
+      <div
+        style={{
+          backgroundColor: '#ecf0f1',
+          padding: '15px',
+          borderRadius: '10px',
+          marginTop: '15px',
+        }}
+      >
+        <h4 style={{ marginBottom: '10px', color: '#2c3e50' }}>Conținutul articolului:</h4>
+        <p style={{ whiteSpace: 'pre-wrap', color: '#2c3e50', lineHeight: '1.6' }}>{updatedArticol.content}</p>
+      </div>
+
+      {updatedArticol.feedback && (
+        <div
+          style={{
+            backgroundColor: '#fdfefe',
+            padding: '15px',
+            borderRadius: '10px',
+            marginTop: '15px',
+            border: '1px solid #dcdde1',
+          }}
+        >
+          <strong style={{ color: '#34495e', display: 'block', marginBottom: '5px' }}>Feedback:</strong>
+          <p style={{ color: '#2c3e50', lineHeight: '1.6' }}>{updatedArticol.feedback}</p>
+        </div>
+      )}
+
+      {isAuthor && updatedArticol.feedback && (
+        <button
+          onClick={handleSubmitNewVersion}
+          style={{
+            marginTop: '15px',
+            padding: '10px 20px',
+            backgroundColor: '#2980b9',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '1em',
+          }}
+        >
           Trimite o versiune nouă
         </button>
       )}
@@ -108,27 +168,36 @@ function ArticolCard({ articol, onRemove }) {
             placeholder="Introdu feedback"
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            style={{ width: '100%', height: '80px', marginTop: '10px' }}
+            style={{
+              width: '100%',
+              height: '100px',
+              marginTop: '15px',
+              padding: '10px',
+              borderRadius: '8px',
+              border: '1px solid #ccc',
+              fontSize: '0.9em',
+            }}
           />
-          <button onClick={handleSendFeedback} style={{ marginTop: '10px' }}>
+          <button
+            onClick={handleSendFeedback}
+            style={{
+              marginTop: '15px',
+              padding: '10px 20px',
+              backgroundColor: '#27ae60',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '1em',
+              marginRight: '10px',
+            }}
+          >
             Trimite Feedback
-          </button>
-          <button
-            onClick={() => handleStatusChange('accepted')}
-            style={{ marginTop: '10px', marginRight: '10px', backgroundColor: 'green', color: 'white' }}
-          >
-            Aprobă
-          </button>
-          <button
-            onClick={() => handleStatusChange('rejected')}
-            style={{ marginTop: '10px', backgroundColor: 'red', color: 'white' }}
-          >
-            Respinge
           </button>
         </>
       )}
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p style={{ color: 'red', marginTop: '15px', fontSize: '0.9em' }}>{error}</p>}
     </div>
   );
 }

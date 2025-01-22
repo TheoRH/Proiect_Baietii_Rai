@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 import authStore from '../stores/AuthStore';
+import ArticolCard from '../components/ArticolCard';
 
 const ConferenceDetails = () => {
   const { id } = useParams(); // Obține ID-ul conferinței din URL
@@ -13,7 +14,8 @@ const ConferenceDetails = () => {
   const [articleTitle, setArticleTitle] = useState('');
   const [articleContent, setArticleContent] = useState('');
   const [isParticipating, setIsParticipating] = useState(false);
-
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
   // Fetch participare utilizator la conferință
   useEffect(() => {
     const checkParticipation = async () => {
@@ -28,6 +30,31 @@ const ConferenceDetails = () => {
     };
 
     checkParticipation();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchConferenceDetails = async () => {
+      try {
+        const response = await axiosInstance.get(`/conference/${id}`);
+        setConference(response.data);
+      } catch (error) {
+        console.error('Eroare la obținerea detaliilor conferinței:', error);
+      }
+    };
+
+    const fetchArticles = async () => {
+      try {
+        const response = await axiosInstance.get(`/conference/${id}/articles`);
+        setArticles(response.data);
+      } catch (error) {
+        console.error('Eroare la obținerea articolelor conferinței:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConferenceDetails();
+    fetchArticles();
   }, [id]);
 
   // Fetch detalii conferință, lista de revieweri și reviewerii alocați
@@ -180,6 +207,19 @@ const ConferenceDetails = () => {
         </ul>
       ) : (
         <p>Nu există revieweri alocați.</p>
+      )}
+
+<h3>Articole asociate</h3>
+      {loading ? (
+        <p>Se încarcă articolele...</p>
+      ) : articles.length === 0 ? (
+        <p>Nu există articole asociate acestei conferințe.</p>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          {articles.map((articol) => (
+            <ArticolCard key={articol.ArticleId} articol={articol} />
+          ))}
+        </div>
       )}
 
       {authStore.getUser()?.role === 'author' && (

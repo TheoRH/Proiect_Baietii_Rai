@@ -1,17 +1,17 @@
 import Article from '../entities/Articole.js';
 import ConferenceReviewers from '../entities/ConferenceReviewers.js';
 import User from '../entities/User.js';
+import Conference from '../entities/Conferinte.js';
 
 
 export async function getArticlesForUser(userId, role) {
   try {
     const whereCondition = {};
 
-    // Condiții pentru rolul utilizatorului
     if (role === 'reviewer') {
-      whereCondition.status = 'pending'; // Reviewerii văd doar articolele în așteptare
+      whereCondition.status = 'pending';
     } else if (role === 'author') {
-      whereCondition.UserId = userId; // Autorii văd doar articolele proprii
+      whereCondition.UserId = userId;
     }
 
     const articles = await Article.findAll({
@@ -19,7 +19,7 @@ export async function getArticlesForUser(userId, role) {
       include: [
         {
           model: User,
-          attributes: ['username'], // Dacă vrei să incluzi numele utilizatorului
+          attributes: ['username'],
         },
       ],
     });
@@ -30,6 +30,34 @@ export async function getArticlesForUser(userId, role) {
     throw error;
   }
 }
+
+export async function getArticleWithConferenceName(articleId) {
+  try {
+    const article = await Article.findOne({
+      where: { ArticleId: articleId },
+      include: [
+        {
+          model: Conference, // Alătură tabela Conference
+          attributes: ['name'], // Selectează doar câmpul "name" din tabela Conference
+        },
+      ],
+    });
+
+    if (!article) {
+      throw new Error('Articolul nu a fost găsit.');
+    }
+
+    // Adaugă numele conferinței la articol
+    return {
+      ...article.toJSON(),
+      conferenceName: article.Conference?.name || 'Nespecificată',
+    };
+  } catch (error) {
+    console.error('Eroare la obținerea articolului cu numele conferinței:', error);
+    throw error;
+  }
+}
+
 
 export async function createArticle(data) {
   try {
@@ -78,6 +106,30 @@ export async function getArticlesByReviewer(reviewerId) {
   }
 }
 
+//functie ce gaseste numele conferintelor
+export async function getArticlesWithConferenceName() {
+  try {
+    // Obține articolele și include numele conferinței
+    const articles = await Article.findAll({
+      include: [
+        {
+          model: Conference, // Alătură tabela Conference
+          attributes: ['name'], // Selectează doar câmpul "name" din tabela Conference
+        },
+      ],
+    });
+
+    // Transformă rezultatele pentru a include numele conferinței
+    return articles.map((article) => ({
+      ...article.toJSON(), // Convertim articolul în JSON pentru a adăuga date noi
+      conferenceName: article.Conference?.name || 'Nespecificată', // Adaugă numele conferinței sau 'Nespecificată'
+    }));
+  } catch (error) {
+    console.error('Eroare la obținerea articolelor cu numele conferinței:', error);
+    throw error;
+  }
+}
+
 
 export async function sendFeedback(articleId, reviewerId, feedback) {
   try {
@@ -85,9 +137,9 @@ export async function sendFeedback(articleId, reviewerId, feedback) {
     if (!article) {
       throw new Error('Articolul nu a fost găsit.');
     }
-
+   
     article.feedback = feedback;
-    article.status = 'pending';
+    article.status = 'pending'; // Sau 'în așteptare'
     await article.save();
   } catch (error) {
     console.error('Eroare la trimiterea feedback-ului:', error);

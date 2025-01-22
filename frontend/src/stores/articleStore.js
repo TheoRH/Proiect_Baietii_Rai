@@ -18,15 +18,15 @@ class ArticleStore {
       console.warn('Token lipsă, nu se poate încărca lista de articole.');
       return;
     }
-
+  
     this.setLoading(true);
     this.setError(null);
-
+  
     try {
       const response = await axiosInstance.get('/article/mine', {
         headers: { Authorization: `Bearer ${authStore.getToken()}` },
       });
-      this.setArticles(response.data);
+      this.setArticles(response.data); // Actualizează lista doar cu articolele relevante
     } catch (error) {
       console.error('Eroare la obținerea articolelor utilizatorului:', error.response?.data || error.message);
       this.setError(error.response?.data?.message || 'Eroare la obținerea articolelor.');
@@ -40,8 +40,9 @@ class ArticleStore {
       console.warn('Token lipsă, nu se poate trimite feedback-ul.');
       return;
     }
-
+  
     try {
+      console.log(`Trimitere feedback: ${feedback} pentru articol: ${articleId}`);
       await axiosInstance.post(
         `/article/${articleId}/feedback`,
         { feedback },
@@ -52,6 +53,7 @@ class ArticleStore {
       throw error;
     }
   }
+  
 
   async submitNewVersion(articleId, content) {
     if (!authStore.getToken()) {
@@ -70,19 +72,21 @@ class ArticleStore {
       throw error;
     }
   }
-
   async updateArticleStatus(articleId, status) {
     if (!authStore.getToken()) {
       console.warn('Token lipsă, nu se poate actualiza statusul.');
       return;
     }
-
+  
     try {
       await axiosInstance.patch(
         `/article/${articleId}/status`,
         { status },
-        { headers: { Authorization: `Bearer ${authStore.getToken()}` },
-      });
+        { headers: { Authorization: `Bearer ${authStore.getToken()}` } }
+      );
+  
+      // Reîncarcă lista de articole după actualizare
+      await this.fetchUserArticles();
     } catch (error) {
       console.error('Eroare la actualizarea statusului articolului:', error.response?.data || error.message);
       throw error;
