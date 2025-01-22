@@ -6,7 +6,7 @@ import Article from '../entities/Articole.js';
 import Sequelize from 'sequelize';
 
 //functie de adaugat articole
-export async function proposeArticle({ title, content, conferenceId, authorName }) {
+export async function proposeArticle({ title, content, conferenceId, userId,authorName }) {
   try {
     // Creare articol în tabela articles
     const article = await Article.create({
@@ -16,6 +16,7 @@ export async function proposeArticle({ title, content, conferenceId, authorName 
       status: 'pending',
       submittedDate: new Date(),
       ConferenceId: conferenceId,
+      UserId: userId,
     });
 
     // Verifică dacă articolul are deja 2 revieweri alocați

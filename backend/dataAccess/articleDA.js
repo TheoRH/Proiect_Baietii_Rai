@@ -1,5 +1,36 @@
 import Article from '../entities/Articole.js';
+import ConferenceReviewers from '../entities/ConferenceReviewers.js';
 import User from '../entities/User.js';
+
+
+export async function getArticlesForUser(userId, role) {
+  try {
+    const whereCondition = {};
+
+    // Condiții pentru rolul utilizatorului
+    if (role === 'reviewer') {
+      whereCondition.status = 'pending'; // Reviewerii văd doar articolele în așteptare
+    } else if (role === 'author') {
+      whereCondition.UserId = userId; // Autorii văd doar articolele proprii
+    }
+
+    const articles = await Article.findAll({
+      where: whereCondition,
+      include: [
+        {
+          model: User,
+          attributes: ['username'], // Dacă vrei să incluzi numele utilizatorului
+        },
+      ],
+    });
+
+    return articles;
+  } catch (error) {
+    console.error('Eroare la obținerea articolelor pentru utilizator:', error);
+    throw error;
+  }
+}
+
 export async function createArticle(data) {
   try {
     return await Article.create(data);
@@ -19,20 +50,34 @@ export async function getArticlesByAuthor(authorId) {
 
 export async function getArticlesByReviewer(reviewerId) {
   try {
+    // Obține ConferenceId-urile asociate utilizatorului
+    const conferenceIds = await ConferenceReviewers.findAll({
+      where: { UserId: reviewerId }, // Condiția pentru UserId
+      attributes: ['ConferenceId'], // Selectăm doar ConferenceId
+      raw: true, // Returnăm doar datele brute
+    });
+
+    // Verifică dacă există conferințe asociate cu utilizatorul
+    if (!conferenceIds || conferenceIds.length === 0) {
+      
+      return []; // Returnăm un array gol dacă nu există conferințe
+    }
+
+    // Extragem doar ConferenceId-urile
+    const conferenceIdArray = conferenceIds.map(record => record.ConferenceId);
+
+   
+
+    // Căutăm articolele pe baza ConferenceId-urilor
     return await Article.findAll({
-      include: [
-        {
-          model: User,
-          as: 'Reviewers',
-          where: { UserId: reviewerId },
-        },
-      ],
+      where: { ConferenceId: conferenceIdArray }, // Filtrare pe baza listei de ConferenceId-uri
     });
   } catch (error) {
-    console.error('Eroare la obținerea articolelor reviewerului:', error);
+    console.error('Eroare la obținerea articolelor pentru reviewer:', error);
     throw error;
   }
 }
+
 
 export async function sendFeedback(articleId, reviewerId, feedback) {
   try {

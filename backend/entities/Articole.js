@@ -38,6 +38,11 @@ const Article = db.define("Article", {
       key: 'ConferenceId',
     },
   },
+  feedback: { 
+    type: Sequelize.TEXT, 
+    allowNull: true, 
+    defaultValue: null 
+  },
 });
 
 

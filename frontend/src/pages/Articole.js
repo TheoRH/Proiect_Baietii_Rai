@@ -11,6 +11,13 @@ const Articole = observer(() => {
     }
   }, [authStore.isLoggedIn()]);
 
+  const handleRemoveArticle = (articleId) => {
+    // Elimină articolul din lista locală
+    articleStore.setArticles(
+      articleStore.articles.filter((article) => article.ArticleId !== articleId)
+    );
+  };
+
   if (!authStore.isLoggedIn()) {
     return <div style={{ color: 'red', padding: '20px' }}>Trebuie să fii autentificat pentru a vedea articolele.</div>;
   }
@@ -31,7 +38,7 @@ const Articole = observer(() => {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
           {articleStore.articles.map((articol) => (
-            <ArticolCard key={articol.ArticleId} articol={articol} />
+            <ArticolCard key={articol.ArticleId} articol={articol} onRemove={handleRemoveArticle} />
           ))}
         </div>
       )}
